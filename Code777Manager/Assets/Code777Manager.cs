@@ -20,7 +20,11 @@ public class Code777Manager : MonoBehaviour
     public bool assistMode = true;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
     public GameObject[] assistTile;
 
+<<<<<<< HEAD
     public List<Rack> racks = new List<Rack>(5);
+=======
+    public Rack[] racks = new Rack[5];
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
 
     // Start is called before the first frame update
     void Start()
@@ -68,16 +72,38 @@ public class Code777Manager : MonoBehaviour
         //    discardTile.Add( new Tile(tilePile[drawTile].number, tilePile[drawTile].color, (i%7)*2F-8F, 3.75F-(i/7)*2.5F, 0,  true, tilePile[drawTile].image, images[11], "TileObject"+i.ToString() ) );
         //    tilePile.Remove(tilePile[drawTile]);
         //}
+<<<<<<< HEAD
 
         setTile.Clear();
         //0號玩家(真玩家)
         for (int i = 0; i<3; i++)
+=======
+
+        //0號玩家(真玩家)
+        for(int i = 0; i<3; i++)
         {
             drawTile = Random.Range(0, tilePile.Count);
             setTile.Add(tilePile[drawTile]);
             tilePile.Remove(tilePile[drawTile]);
         }
+        racks[0] = new Rack( new Tile( setTile[0].number , setTile[0].color, -2.25F, -3.25F, 0F, setTile[0].image, "Player0Tile0"),
+                                        new Tile(setTile[1].number, setTile[1].color, 0F, -3.25F, 0F, setTile[1].image, "Player0Tile1"),
+                                        new Tile(setTile[2].number, setTile[2].color, 2.25F, -3.25F, 0F, setTile[2].image, "Player0Tile2"));
 
+        setTile.Clear();
+        //1號玩家(電腦1)
+        for (int i = 0; i < 3; i++)
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
+        {
+            drawTile = Random.Range(0, tilePile.Count);
+            setTile.Add(tilePile[drawTile]);
+            tilePile.Remove(tilePile[drawTile]);
+        }
+        racks[1] = new Rack(new Tile(setTile[0].number, setTile[0].color, -6.25F, 1F, 0F, setTile[0].image, "Player1Tile0",0.75F),
+                                        new Tile(setTile[1].number, setTile[1].color, -5F, 1F, 0F, setTile[1].image, "Player1Tile1", 0.75F),
+                                        new Tile(setTile[2].number, setTile[2].color, -3.75F, 1F, 0F, setTile[2].image, "Player1Tile2", 0.75F));
+
+<<<<<<< HEAD
         //racks[0] = new Rack(new Tile(setTile[0].number , setTile[0].color, -2.25F, -3.25F, 0F, setTile[0].image, "Player0Tile0"),
         //                                new Tile(setTile[1].number, setTile[1].color, 0F, -3.25F, 0F, setTile[1].image, "Player0Tile1"),
         //                                new Tile(setTile[2].number, setTile[2].color, 2.25F, -3.25F, 0F, setTile[2].image, "Player0Tile2"));
@@ -98,6 +124,8 @@ public class Code777Manager : MonoBehaviour
                                         new Tile(setTile[1].number, setTile[1].color, -5F, 1F, 0F, setTile[1].image, "Player1Tile1", 0.75F),
                                         new Tile(setTile[2].number, setTile[2].color, -3.75F, 1F, 0F, setTile[2].image, "Player1Tile2", 0.75F)));
 
+=======
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
         setTile.Clear();
         //2號玩家(電腦2)
         for (int i = 0; i < 3; i++)
@@ -106,9 +134,15 @@ public class Code777Manager : MonoBehaviour
             setTile.Add(tilePile[drawTile]);
             tilePile.Remove(tilePile[drawTile]);
         }
+<<<<<<< HEAD
         racks.Add( new Rack(new Tile(setTile[0].number, setTile[0].color, -6.25F, 4F, 0F, setTile[0].image, "Player2Tile0", 0.75F),
                                         new Tile(setTile[1].number, setTile[1].color, -5F, 4F, 0F, setTile[1].image, "Player2Tile1", 0.75F),
                                         new Tile(setTile[2].number, setTile[2].color, -3.75F, 4F, 0F, setTile[2].image, "Player2Tile2", 0.75F)));
+=======
+        racks[2] = new Rack(new Tile(setTile[0].number, setTile[0].color, -6.25F, 4F, 0F, setTile[0].image, "Player2Tile0", 0.75F),
+                                        new Tile(setTile[1].number, setTile[1].color, -5F, 4F, 0F, setTile[1].image, "Player2Tile1", 0.75F),
+                                        new Tile(setTile[2].number, setTile[2].color, -3.75F, 4F, 0F, setTile[2].image, "Player2Tile2", 0.75F));
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
 
         setTile.Clear();
         //3號玩家(電腦3)
@@ -118,9 +152,15 @@ public class Code777Manager : MonoBehaviour
             setTile.Add(tilePile[drawTile]);
             tilePile.Remove(tilePile[drawTile]);
         }
+<<<<<<< HEAD
         racks.Add( new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 4F, 0F, setTile[0].image, "Player3Tile0", 0.75F),
                                         new Tile(setTile[1].number, setTile[1].color, 5F, 4F, 0F, setTile[1].image, "Player3Tile1", 0.75F),
                                         new Tile(setTile[2].number, setTile[2].color, 6.25F, 4F, 0F, setTile[2].image, "Player3Tile2", 0.75F)));
+=======
+        racks[3] = new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 4F, 0F, setTile[0].image, "Player3Tile0", 0.75F),
+                                        new Tile(setTile[1].number, setTile[1].color, 5F, 4F, 0F, setTile[1].image, "Player3Tile1", 0.75F),
+                                        new Tile(setTile[2].number, setTile[2].color, 6.25F, 4F, 0F, setTile[2].image, "Player3Tile2", 0.75F));
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
 
         setTile.Clear();
         //4號玩家(電腦4)
@@ -130,9 +170,15 @@ public class Code777Manager : MonoBehaviour
             setTile.Add(tilePile[drawTile]);
             tilePile.Remove(tilePile[drawTile]);
         }
+<<<<<<< HEAD
         racks.Add(new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 1F, 0F, setTile[0].image, "Player4Tile0", 0.75F),
                                         new Tile(setTile[1].number, setTile[1].color, 5F, 1F, 0F, setTile[1].image, "Player4Tile1", 0.75F),
                                         new Tile(setTile[2].number, setTile[2].color, 6.25F, 1F, 0F, setTile[2].image, "Player4Tile2", 0.75F)));
+=======
+        racks[4] = new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 1F, 0F, setTile[0].image, "Player4Tile0", 0.75F),
+                                        new Tile(setTile[1].number, setTile[1].color, 5F, 1F, 0F, setTile[1].image, "Player4Tile1", 0.75F),
+                                        new Tile(setTile[2].number, setTile[2].color, 6.25F, 1F, 0F, setTile[2].image, "Player4Tile2", 0.75F));
+>>>>>>> parent of 3a8c1b8... Revert "UI Finish"
     }
 
     // Update is called once per frame
