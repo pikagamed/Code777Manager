@@ -14,7 +14,7 @@ public class Rack
 
     private bool _reachEighteen;            //牌架問題1，你看到幾個牌架上的總和大於等於18
     private bool _untilTwelve;              //牌架問題2，你看到幾個牌架上的總和小於等於12
-    private bool _sameNumber;            //牌架問題3，你看到幾個牌架上有不同顏色的相同數字
+    private bool _sameNumberDifColor;            //牌架問題3，你看到幾個牌架上有不同顏色的相同數字
     private bool _threeColor;               //牌架問題4，你看到幾個牌架上有三個不同顏色
     private bool _allOddEven;               //牌架問題5，你看到幾個牌架上三個數字均是奇數或均是偶數
     private bool _sameColorNumber;   //牌架問題6，你看到幾個牌架上有相同顏色的相同數字
@@ -31,7 +31,7 @@ public class Rack
 
     public bool reachEighteen { get { return _reachEighteen; } }
     public bool untilTwelve { get { return _untilTwelve; } }
-    public bool sameNumber { get { return _sameNumber; } }
+    public bool sameNumberDifColor { get { return _sameNumberDifColor; } }
     public bool threeColor { get { return _threeColor; } }
     public bool allOddEven { get { return _allOddEven; } }
     public bool sameColorNumber { get { return _sameColorNumber; } }
@@ -80,7 +80,7 @@ public class Rack
         if (numbers[0]!=numbers[1] && numbers[1]!=numbers[2] && numbers[0] != numbers[2])
         {
             //三個數字均不相同
-            _sameNumber = false;
+            _sameNumberDifColor = false;
             _sameColorNumber = false;
         }
         else
@@ -103,7 +103,7 @@ public class Rack
                 sameColorCount += colors[0] == colors[2] ? 1 : 0;
             }
 
-            _sameNumber = differentColorCount > 0 ? true : false;
+            _sameNumberDifColor = differentColorCount > 0 ? true : false;
             _sameColorNumber = sameColorCount > 0 ? true : false;
         }
 
