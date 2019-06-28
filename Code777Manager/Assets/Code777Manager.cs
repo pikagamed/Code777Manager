@@ -158,6 +158,17 @@ public class Code777Manager : MonoBehaviour
         }
         #endregion
 
+
+        #region 牌架過濾
+
+        activePlayer[0].rackCheck(activePlayer);
+        activePlayer[1].rackCheck(activePlayer);
+        activePlayer[2].rackCheck(activePlayer);
+        activePlayer[3].rackCheck(activePlayer);
+        activePlayer[4].rackCheck(activePlayer);
+
+        #endregion
+
         //for (int i=0; i<28; i++)
         //{
         //    drawTile = Random.Range(0, tilePile.Count);
