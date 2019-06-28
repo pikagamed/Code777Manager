@@ -44,11 +44,11 @@ public class Rack
 
     #region 建構方法
 
-    public Rack(Tile tile1, Tile tile2, Tile tile3)
+    public Rack(Tile tile0, Tile tile1, Tile tile2)
     {
-        _tiles[0] = tile1;
-        _tiles[1] = tile2;
-        _tiles[2] = tile3;
+        _tiles[0] = tile0;
+        _tiles[1] = tile1;
+        _tiles[2] = tile2;
 
         int[] numbers = { _tiles[0].number, _tiles[1].number, _tiles[2].number };
         string[] colors = { _tiles[0].color, _tiles[1].color, _tiles[2].color };

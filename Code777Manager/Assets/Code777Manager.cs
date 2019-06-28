@@ -22,6 +22,7 @@ public class Code777Manager : MonoBehaviour
     #endregion
 
     public GameObject[] playerIcon;
+    public TextMesh[] playerName;
 
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
     public List<Tile> setTile = new List<Tile>(3); //設置中的Tile暫存器
@@ -82,9 +83,22 @@ public class Code777Manager : MonoBehaviour
         {
             drawPlayer = Random.Range(0, presetPlayerName.Count);
 
-            string playerName = presetPlayerName[drawPlayer];
-            Sprite playerIcon = presetPlayerIcon[drawPlayer];
+            string activePlayerName = presetPlayerName[drawPlayer];
+            Sprite activePlayerIcon = presetPlayerIcon[drawPlayer];
+            string[] tileSprite = new string[] { "Player" + i + "Tile0", "Player" + i + "Tile1", "Player" + i + "Tile2" };
+            string[] victoryLight = new string[] { "Player" + i + "Victory0", "Player" + i + "Victory1", "Player" + i + "Victory2" };
 
+            playerIcon[i].GetComponent<SpriteRenderer>().sprite = activePlayerIcon;
+            playerName[i].text = activePlayerName;
+
+            Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, tileSprite, victoryLight);
+
+            activePlayer.Add(newPlayer);
+
+            presetPlayerName.Remove(activePlayerName);
+            presetPlayerIcon.Remove(activePlayerIcon);
+
+            /*
             Vector3[] playerTiles;
             switch(i)
             {
@@ -104,7 +118,9 @@ public class Code777Manager : MonoBehaviour
                     playerTiles = new Vector3[] { new Vector3(-2.25F, -3.25F, 0F), new Vector3(0F, -3.25F, 0F), new Vector3(2.25F, -3.25F, 0F) };
                     break;
             }
+            */
 
+            /*
             setTile.Clear();
             for (int j = 0; j < 3; j++)
             {
@@ -116,15 +132,31 @@ public class Code777Manager : MonoBehaviour
             Rack playerRack = new Rack(new Tile(setTile[0].number, setTile[0].color, playerTiles[0].x, playerTiles[0].y, playerTiles[0].z, setTile[0].image, "Player0Tile0", i==0?1F:0.75F),
                                             new Tile(setTile[1].number, setTile[1].color, playerTiles[1].x, playerTiles[1].y, playerTiles[1].z, setTile[1].image, "Player0Tile1", i == 0 ? 1F : 0.75F),
                                             new Tile(setTile[2].number, setTile[2].color, playerTiles[2].x, playerTiles[2].y, playerTiles[2].z, setTile[2].image, "Player0Tile2", i == 0 ? 1F : 0.75F));
-
-            string[] victoryLight = new string[] { "Player"+i+"Victory0", "Player" + i + "Victory1", "Player" + i + "Victory2" };
-
-            Player newPlayer = new Player(playerName, playerIcon, i, playerRack, 0, playerTiles, victoryLight);
-
-            activePlayer.Add(newPlayer);
+            */
         }
 
-    #endregion
+        #endregion
+
+        #region 初始化RACKS
+        for(int i=0; i<5; i++)
+        {
+            Tile tile0, tile1, tile2;
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile0 = new Tile( tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile0
+            tilePile.Remove(tilePile[drawTile]);
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile1 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile1
+            tilePile.Remove(tilePile[drawTile]);
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile2 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile2
+            tilePile.Remove(tilePile[drawTile]);
+
+            activePlayer[i].newRack(tile0, tile1, tile2);
+        }
+        #endregion
 
         //for (int i=0; i<28; i++)
         //{

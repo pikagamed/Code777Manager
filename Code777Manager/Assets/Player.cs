@@ -18,6 +18,7 @@ public class Player
     private int _victory = 0;
     private Vector3[] _tilePosition = new Vector3[3];
 
+    private GameObject[] _tileSprite = new GameObject[3];
     private GameObject[] _victoryLight = new GameObject[3];
 
     #endregion
@@ -43,14 +44,16 @@ public class Player
 /// <param name="victory">分數</param>
 /// <param name="tilePosition">牌架於場景上位置</param>
 /// <param name="victoryLight">勝利燈在場景上名稱</param>
-    public Player( string name, Sprite icon, int playerId, Rack rack, int victory, Vector3[] tilePosition, string[] victoryLight)
+    public Player( string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight)
     {
         _name = name;
         _icon = icon;
         _playerId = playerId;
-        _rack = rack;
         _victory = victory;
         _tilePosition = tilePosition;
+        _tileSprite[0] = GameObject.Find(tileSprite[0]);
+        _tileSprite[1] = GameObject.Find(tileSprite[1]);
+        _tileSprite[2] = GameObject.Find(tileSprite[2]);
         _victoryLight[0] = GameObject.Find(victoryLight[0]);
         _victoryLight[1] = GameObject.Find(victoryLight[1]);
         _victoryLight[2] = GameObject.Find(victoryLight[2]);
@@ -58,4 +61,15 @@ public class Player
 
     #endregion
 
+    #region 運算方法
+
+    public void newRack( Tile tile0, Tile tile1, Tile tile2 )
+    {
+        _rack = new Rack(tile0, tile1, tile2);
+        _tileSprite[0].GetComponent<SpriteRenderer>().sprite = tile0.image;
+        _tileSprite[1].GetComponent<SpriteRenderer>().sprite = tile1.image;
+        _tileSprite[2].GetComponent<SpriteRenderer>().sprite = tile2.image;
+    }
+
+    #endregion
 }
