@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Code777Manager : MonoBehaviour
 {
@@ -27,13 +28,21 @@ public class Code777Manager : MonoBehaviour
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
     public List<Tile> setTile = new List<Tile>(3); //設置中的Tile暫存器
     public List<Tile> discardTile = new List<Tile>(28); //使用過被棄置於場中央的Tile堆
+    public List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
 
     public bool assistMode = true;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
     public GameObject[] assistTile;
 
     public List<Player> activePlayer;
 
-    public List<Rack> racks = new List<Rack>(5);
+    public int answerPlayer;
+
+    public Text questionText;
+    public Text answerText;
+    public Text speakerText;
+
+    public bool spaceKeyLock = true;
+
 
     // Start is called before the first frame update
     void Start()
@@ -76,7 +85,6 @@ public class Code777Manager : MonoBehaviour
 
         #endregion
 
-
         #region 初始化玩家
 
         for ( int i=0; i<5; i++ )
@@ -98,47 +106,19 @@ public class Code777Manager : MonoBehaviour
             presetPlayerName.Remove(activePlayerName);
             presetPlayerIcon.Remove(activePlayerIcon);
 
-            /*
-            Vector3[] playerTiles;
-            switch(i)
-            {
-                case 1:
-                    playerTiles = new Vector3[] { new Vector3(-6.25F, 1F, 0F), new Vector3(-5F, 1F, 0F), new Vector3(-3.75F, 1F, 0F) };
-                    break;
-                case 2:
-                    playerTiles = new Vector3[] { new Vector3(-6.25F, 4F, 0F), new Vector3(-5F, 4F, 0F), new Vector3(-3.75F, 4F, 0F) };
-                    break;
-                case 3:
-                    playerTiles = new Vector3[] { new Vector3(3.75F, 4F, 0F), new Vector3(5F, 4F, 0F), new Vector3(6.25F, 4F, 0F) };
-                    break;
-                case 4:
-                    playerTiles = new Vector3[] { new Vector3(3.75F, 1F, 0F), new Vector3(5F, 1F, 0F), new Vector3(6.25F, 1F, 0F) };
-                    break;
-                default:
-                    playerTiles = new Vector3[] { new Vector3(-2.25F, -3.25F, 0F), new Vector3(0F, -3.25F, 0F), new Vector3(2.25F, -3.25F, 0F) };
-                    break;
-            }
-            */
-
-            /*
-            setTile.Clear();
-            for (int j = 0; j < 3; j++)
-            {
-                drawTile = Random.Range(0, tilePile.Count);
-                setTile.Add(tilePile[drawTile]);
-                tilePile.Remove(tilePile[drawTile]);
-            }
-
-            Rack playerRack = new Rack(new Tile(setTile[0].number, setTile[0].color, playerTiles[0].x, playerTiles[0].y, playerTiles[0].z, setTile[0].image, "Player0Tile0", i==0?1F:0.75F),
-                                            new Tile(setTile[1].number, setTile[1].color, playerTiles[1].x, playerTiles[1].y, playerTiles[1].z, setTile[1].image, "Player0Tile1", i == 0 ? 1F : 0.75F),
-                                            new Tile(setTile[2].number, setTile[2].color, playerTiles[2].x, playerTiles[2].y, playerTiles[2].z, setTile[2].image, "Player0Tile2", i == 0 ? 1F : 0.75F));
-            */
         }
 
         #endregion
 
+        #region 初始化問題卡
+        for(int i=1; i<=23; i++)
+        {
+            questionCard.Add(i);
+        }
+        #endregion
+
         #region 初始化RACKS
-        for(int i=0; i<5; i++)
+        for (int i=0; i<5; i++)
         {
             Tile tile0, tile1, tile2;
 
@@ -154,85 +134,28 @@ public class Code777Manager : MonoBehaviour
             tile2 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile2
             tilePile.Remove(tilePile[drawTile]);
 
-            activePlayer[i].newRack(tile0, tile1, tile2);
+            activePlayer[i].NewRack(tile0, tile1, tile2);
         }
         #endregion
 
-
         #region 牌架過濾
 
-        activePlayer[0].rackCheck(activePlayer);
-        activePlayer[1].rackCheck(activePlayer);
-        activePlayer[2].rackCheck(activePlayer);
-        activePlayer[3].rackCheck(activePlayer);
-        activePlayer[4].rackCheck(activePlayer);
+        activePlayer[0].RackCheck(activePlayer, discardTile);
+        activePlayer[1].RackCheck(activePlayer, discardTile);
+        activePlayer[2].RackCheck(activePlayer, discardTile);
+        activePlayer[3].RackCheck(activePlayer, discardTile);
+        activePlayer[4].RackCheck(activePlayer, discardTile);
+
+        //玩家0的輔助模式
+        activePlayer[0].TileLight(assistMode);
 
         #endregion
 
-        //for (int i=0; i<28; i++)
-        //{
-        //    drawTile = Random.Range(0, tilePile.Count);
-        //    discardTile.Add( new Tile(tilePile[drawTile].number, tilePile[drawTile].color, (i%7)*2F-8F, 3.75F-(i/7)*2.5F, 0,  true, tilePile[drawTile].image, images[11], "TileObject"+i.ToString() ) );
-        //    tilePile.Remove(tilePile[drawTile]);
-        //}
+        #region 隨機決定起始玩家
+        answerPlayer = Random.Range(0, 5);
+        #endregion
 
-
-        //setTile.Clear();
-        ////0號玩家(真玩家)
-
-
-        //setTile.Clear();
-        ////1號玩家(電腦1)
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    drawTile = Random.Range(0, tilePile.Count);
-        //    setTile.Add(tilePile[drawTile]);
-        //    tilePile.Remove(tilePile[drawTile]);
-        //}
-        //racks.Add(new Rack(new Tile(setTile[0].number, setTile[0].color, -6.25F, 1F, 0F, setTile[0].image, "Player1Tile0",0.75F),
-        //                                new Tile(setTile[1].number, setTile[1].color, -5F, 1F, 0F, setTile[1].image, "Player1Tile1", 0.75F),
-        //                                new Tile(setTile[2].number, setTile[2].color, -3.75F, 1F, 0F, setTile[2].image, "Player1Tile2", 0.75F)));
-
-
-        //setTile.Clear();
-        ////2號玩家(電腦2)
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    drawTile = Random.Range(0, tilePile.Count);
-        //    setTile.Add(tilePile[drawTile]);
-        //    tilePile.Remove(tilePile[drawTile]);
-        //}
-
-        //racks.Add( new Rack(new Tile(setTile[0].number, setTile[0].color, -6.25F, 4F, 0F, setTile[0].image, "Player2Tile0", 0.75F),
-        //                                new Tile(setTile[1].number, setTile[1].color, -5F, 4F, 0F, setTile[1].image, "Player2Tile1", 0.75F),
-        //                                new Tile(setTile[2].number, setTile[2].color, -3.75F, 4F, 0F, setTile[2].image, "Player2Tile2", 0.75F)));
-
-
-        //setTile.Clear();
-        ////3號玩家(電腦3)
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    drawTile = Random.Range(0, tilePile.Count);
-        //    setTile.Add(tilePile[drawTile]);
-        //    tilePile.Remove(tilePile[drawTile]);
-        //}
-        //racks.Add( new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 4F, 0F, setTile[0].image, "Player3Tile0", 0.75F),
-        //                                new Tile(setTile[1].number, setTile[1].color, 5F, 4F, 0F, setTile[1].image, "Player3Tile1", 0.75F),
-        //                                new Tile(setTile[2].number, setTile[2].color, 6.25F, 4F, 0F, setTile[2].image, "Player3Tile2", 0.75F)));
-
-        //setTile.Clear();
-        ////4號玩家(電腦4)
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    drawTile = Random.Range(0, tilePile.Count);
-        //    setTile.Add(tilePile[drawTile]);
-        //    tilePile.Remove(tilePile[drawTile]);
-        //}
-
-        //racks.Add(new Rack(new Tile(setTile[0].number, setTile[0].color, 3.75F, 1F, 0F, setTile[0].image, "Player4Tile0", 0.75F),
-        //                                new Tile(setTile[1].number, setTile[1].color, 5F, 1F, 0F, setTile[1].image, "Player4Tile1", 0.75F),
-        //                                new Tile(setTile[2].number, setTile[2].color, 6.25F, 1F, 0F, setTile[2].image, "Player4Tile2", 0.75F)));
-
+        spaceKeyLock = true;
     }
 
     // Update is called once per frame
@@ -240,11 +163,482 @@ public class Code777Manager : MonoBehaviour
     {
         if (Input.anyKeyDown)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.F2))
             {
                 //Debug.Log("PRESS SPACE");
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
             }
+            if (spaceKeyLock && Input.GetKeyDown(KeyCode.Space))
+            {
+                //Debug.Log("PRESS SPACE");
+                //UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
+                spaceKeyLock = false;   //鎖死空白鍵
+                drawCard = Random.Range(0, questionCard.Count);
+                int cardNum = questionCard[drawCard];
+                questionCard.Remove(cardNum);
+                StartCoroutine(answerCard( cardNum, activePlayer ));
+            }
         }
+    }
+
+    IEnumerator answerCard(int cardId, List<Player> players)
+    {
+        activePlayer[0].nolongerAnswerPlayer();
+        activePlayer[1].nolongerAnswerPlayer();
+        activePlayer[2].nolongerAnswerPlayer();
+        activePlayer[3].nolongerAnswerPlayer();
+        activePlayer[4].nolongerAnswerPlayer();
+        questionText.text = "";
+        answerText.text = "";
+        speakerText.text = "這個問題由 <color=#FFC000>"+activePlayer[answerPlayer].name+"</color> 回答" ;
+        activePlayer[answerPlayer].becomeAnswerPlayer();
+        yield return new WaitForSeconds(1);
+        //顯示問題卡
+        switch (cardId)
+        {
+            case 1:
+                questionText.text = cardId+". 有多少個牌架上的牌，三個數字總和是<b>18以上</b>？";
+                break;
+            case 2:
+                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
+                break;
+            case 3:
+                questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
+                break;
+            case 4:
+                questionText.text = cardId + ". 有多少個牌架上的牌，出現三個<b>不同顏色</b>的數字？";
+                break;
+            case 5:
+                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
+                break;
+            case 6:
+                questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
+                break;
+            case 7:
+                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
+                break;
+            case 8:
+                questionText.text = cardId + ". 你看到<b>多少種顏色</b>的數字牌？";
+                break;
+            case 9:
+                questionText.text = cardId + ". 有幾種<b>顏色</b>出現了<b>三次以上</b>？" ;
+                break;
+            case 10:
+                questionText.text = cardId + ". 有幾種數字<b>完全沒有出現</b>？";
+                break;
+            case 11:
+                questionText.text = cardId + ". <b><color=#009960>○綠1</color>、<color=#808080>☆黑5</color>、<color=#D91ACC>✖粉紅7</color></b>這三種牌，你總共看到幾張？";
+                break;
+            case 12:
+                questionText.text = cardId + ". <b><color=#808080>☆黑3</color>和<color=#D91ACC>✖粉紅6</color></b>，何者較多？";
+                break;
+            case 13:
+                questionText.text = cardId + ". <b><color=#009960>○綠6</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                break;
+            case 14:
+                questionText.text = cardId + ". <b><color=#F2CC00>△黃2</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                break;
+            case 15:
+                questionText.text = cardId + ". <b><color=#D91ACC>✖粉紅6</color>和<color=#009960>○綠6</color></b>，何者較多？";
+                break;
+            case 16:
+                questionText.text = cardId + ". <b><color=#0059FF>◇藍7</color>和其他顏色的7</b>，何者較多？";
+                break;
+            case 17:
+                questionText.text = cardId + ". <b><color=#A64C26>□棕色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                break;
+            case 18:
+                questionText.text = cardId + ". <b><color=#D90000>⎔紅色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                break;
+            case 19:
+                questionText.text = cardId + ". <b><color=#009960>○綠色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                break;
+            case 20:
+                questionText.text = cardId + ". <b><color=#F2CC00>△黃色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                break;
+            case 21:
+                questionText.text = cardId + ". <b><color=#808080>☆黑色</color>和<color=#A64C26>□棕色</color></b>，何者較多？";
+                break;
+            case 22:
+                questionText.text = cardId + ". <b><color=#808080>☆黑色</color>和<color=#D90000>⎔紅色</color></b>，何者較多？";
+                break;
+            case 23:
+                questionText.text = cardId + ". <b><color=#009960>○綠色</color>和<color=#F2CC00>△黃色</color></b>，何者較多？";
+                break;
+        }
+        yield return new WaitForSeconds(2);
+
+        int answerKey = 0;
+        int compareKey1 = 0;
+        int compareKey2 = 0;
+        int[] numberColorKey = new int[7];
+
+        switch (cardId)
+        {
+            case 1:
+                // 有多少個牌架上的牌，三個數字總和是<b>18以上</b>？";
+                for (int i=0; i<players.Count;i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.reachEighteen ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 2:
+                // 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.untilTwelve ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 3:
+                // 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.sameNumberDifColor ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 4:
+                //有多少個牌架上的牌，出現三個<b>不同顏色</b>的數字？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.threeColor ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 5:
+                //有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.allOddEven ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 6:
+                //有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.sameColorNumber ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 7:
+                //有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                        answerKey += activePlayer[i].rack.consecutiveNumber ? 1 : 0;
+                }
+                answerText.text = answerKey + "組";
+                break;
+            case 8:
+                //你看到<b>多少種顏色</b>的數字牌？";
+                //顏色順序 綠、黃、黑、棕、紅、粉、藍
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            switch( activePlayer[i].rack.tiles[j].color )
+                            {
+                                case "G":   numberColorKey[0]++;    break;
+                                case "Y":   numberColorKey[1]++;    break;
+                                case "K":   numberColorKey[2]++;    break;
+                                case "B":   numberColorKey[3]++;    break;
+                                case "R":   numberColorKey[4]++;    break;
+                                case "P":   numberColorKey[5]++;    break;
+                                case "C":   numberColorKey[6]++;    break;
+                            }
+                        }
+                    }
+                }
+                for (int i = 0; i < 7; i++)
+                {
+                    if (numberColorKey[i] > 0)
+                        answerKey++;
+                }
+                answerText.text = answerKey + "種";
+                break;
+            case 9:
+                // 有幾種<b>顏色</b>出現了<b>三次以上</b>？";
+                //顏色順序 綠、黃、黑、棕、紅、粉、藍
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            switch (activePlayer[i].rack.tiles[j].color)
+                            {
+                                case "G": numberColorKey[0]++; break;
+                                case "Y": numberColorKey[1]++; break;
+                                case "K": numberColorKey[2]++; break;
+                                case "B": numberColorKey[3]++; break;
+                                case "R": numberColorKey[4]++; break;
+                                case "P": numberColorKey[5]++; break;
+                                case "C": numberColorKey[6]++; break;
+                            }
+                        }
+                    }
+                }
+                for (int i = 0; i < 7; i++)
+                {
+                    if (numberColorKey[i] >= 3)
+                        answerKey++;
+                }
+                answerText.text = answerKey + "種";
+                break;
+            case 10:
+                //有幾種數字<b>完全沒有出現</b>？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            numberColorKey[activePlayer[i].rack.tiles[j].number - 1]++;
+                        }
+                    }
+                }
+                for (int i = 0; i < 7; i++)
+                {
+                    if (numberColorKey[i] == 0)
+                        answerKey++;
+                }
+                answerText.text = answerKey + "種";
+                break;
+            case 11:
+                //<b><color=#009960>○綠1</color>、<color=#808080>☆黑5</color>、<color=#D91ACC>✖粉紅7</color></b>這三種牌，你總共看到幾張？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 1 && players[i].rack.tiles[j].color == "G") answerKey++;
+                            if (players[i].rack.tiles[j].number == 5 && players[i].rack.tiles[j].color == "K") answerKey++;
+                            if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color == "P") answerKey++;
+                        }
+                    }
+                }
+                answerText.text = answerKey + "張";
+                break;
+            case 12:
+                //<b><color=#808080>☆黑3</color>和<color=#D91ACC>✖粉紅6</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 3 && players[i].rack.tiles[j].color == "K") compareKey1++;
+                            if (players[i].rack.tiles[j].number == 6 && players[i].rack.tiles[j].color == "P") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑3</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅6</color></b>" : "<b>一樣多</b>");
+                break;
+            case 13:
+                //<b><color=#009960>○綠6</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 6 && players[i].rack.tiles[j].color == "G") compareKey1++;
+                            if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color == "Y") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠6</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃7</color>></b>" : "<b>一樣多</b>");
+                break;
+            case 14:
+                //<b><color=#F2CC00>△黃2</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 2 && players[i].rack.tiles[j].color == "Y") compareKey1++;
+                            if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color == "Y") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>△黃2</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃7</color>></b>" : "<b>一樣多</b>");
+                break;
+            case 15:
+                //<b><color=#D91ACC>✖粉紅6</color>和<color=#009960>○綠6</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 6 && players[i].rack.tiles[j].color == "P") compareKey1++;
+                            if (players[i].rack.tiles[j].number == 6 && players[i].rack.tiles[j].color == "G") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>✖粉紅6</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#009960>○綠6</color></b>" : "<b>一樣多</b>");
+                break;
+            case 16:
+                //<b><color=#0059FF>◇藍7</color>和其他顏色的7</b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color == "C") compareKey1++;
+                            if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color != "C") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1> compareKey2) ? "<b><color=#0059FF>◇藍7</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>其他顏色7</color></b>" : "<b>一樣多</b>");
+                break;
+            case 17:
+                //<b><color=#A64C26>□棕色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "B") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "C") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>□棕色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>◇藍色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 18:
+                //<b><color=#D90000>⎔紅色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "R") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "P") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>⎔紅色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 19:
+                //<b><color=#009960>○綠色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "G") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "C") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>◇藍色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 20:
+                //<b><color=#F2CC00>△黃色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "Y") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "P") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>△黃色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 21:
+                //<b><color=#808080>☆黑色</color>和<color=#A64C26>□棕色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "K") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "B") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>□棕色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 22:
+                //<b><color=#808080>☆黑色</color>和<color=#D90000>⎔紅色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "K") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "R") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D90000>⎔紅色</color></b>" : "<b>一樣多</b>");
+                break;
+            case 23:
+                //<b><color=#009960>○綠色</color>和<color=#F2CC00>△黃色</color></b>，何者較多？";
+                for (int i = 0; i < players.Count; i++)
+                {
+                    if (answerPlayer != i)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (players[i].rack.tiles[j].color == "G") compareKey1++;
+                            if (players[i].rack.tiles[j].color == "Y") compareKey2++;
+                        }
+                    }
+                }
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃色</color></b>" : "<b>一樣多</b>");
+                break;
+        }
+
+        answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+
+        #region 重置問題卡
+        if(questionCard.Count==0)
+        {
+            questionCard.Clear();
+            for (int i = 1; i <= 23; i++)
+            {
+                questionCard.Add(i);
+            }
+        }
+        #endregion
+
+        //恢復空白鍵功能
+        spaceKeyLock = true;
     }
 }

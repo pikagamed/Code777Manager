@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum Infer { Possible, Confirm, Which }
 
+[System.Serializable]
 public class TileInfer
 {
     #region 欄位宣告
