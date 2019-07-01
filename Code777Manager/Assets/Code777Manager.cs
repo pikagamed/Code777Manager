@@ -183,15 +183,15 @@ public class Code777Manager : MonoBehaviour
 
     IEnumerator answerCard(int cardId, List<Player> players)
     {
-        activePlayer[0].nolongerAnswerPlayer();
-        activePlayer[1].nolongerAnswerPlayer();
-        activePlayer[2].nolongerAnswerPlayer();
-        activePlayer[3].nolongerAnswerPlayer();
-        activePlayer[4].nolongerAnswerPlayer();
+        activePlayer[0].NolongerAnswerPlayer();
+        activePlayer[1].NolongerAnswerPlayer();
+        activePlayer[2].NolongerAnswerPlayer();
+        activePlayer[3].NolongerAnswerPlayer();
+        activePlayer[4].NolongerAnswerPlayer();
         questionText.text = "";
         answerText.text = "";
         speakerText.text = "這個問題由 <color=#FFC000>"+activePlayer[answerPlayer].name+"</color> 回答" ;
-        activePlayer[answerPlayer].becomeAnswerPlayer();
+        activePlayer[answerPlayer].BecomeAnswerPlayer();
         yield return new WaitForSeconds(1);
         //顯示問題卡
         switch (cardId)
@@ -227,43 +227,43 @@ public class Code777Manager : MonoBehaviour
                 questionText.text = cardId + ". 有幾種數字<b>完全沒有出現</b>？";
                 break;
             case 11:
-                questionText.text = cardId + ". <b><color=#009960>○綠1</color>、<color=#808080>☆黑5</color>、<color=#D91ACC>✖粉紅7</color></b>這三種牌，你總共看到幾張？";
+                questionText.text = cardId + ". <b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
                 break;
             case 12:
-                questionText.text = cardId + ". <b><color=#808080>☆黑3</color>和<color=#D91ACC>✖粉紅6</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
                 break;
             case 13:
-                questionText.text = cardId + ". <b><color=#009960>○綠6</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
                 break;
             case 14:
-                questionText.text = cardId + ". <b><color=#F2CC00>△黃2</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
                 break;
             case 15:
-                questionText.text = cardId + ". <b><color=#D91ACC>✖粉紅6</color>和<color=#009960>○綠6</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
                 break;
             case 16:
-                questionText.text = cardId + ". <b><color=#0059FF>◇藍7</color>和其他顏色的7</b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
                 break;
             case 17:
-                questionText.text = cardId + ". <b><color=#A64C26>□棕色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
                 break;
             case 18:
-                questionText.text = cardId + ". <b><color=#D90000>⎔紅色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
                 break;
             case 19:
-                questionText.text = cardId + ". <b><color=#009960>○綠色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
                 break;
             case 20:
-                questionText.text = cardId + ". <b><color=#F2CC00>△黃色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
                 break;
             case 21:
-                questionText.text = cardId + ". <b><color=#808080>☆黑色</color>和<color=#A64C26>□棕色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
                 break;
             case 22:
-                questionText.text = cardId + ". <b><color=#808080>☆黑色</color>和<color=#D90000>⎔紅色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
                 break;
             case 23:
-                questionText.text = cardId + ". <b><color=#009960>○綠色</color>和<color=#F2CC00>△黃色</color></b>，何者較多？";
+                questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
                 break;
         }
         yield return new WaitForSeconds(2);
@@ -416,7 +416,7 @@ public class Code777Manager : MonoBehaviour
                 answerText.text = answerKey + "種";
                 break;
             case 11:
-                //<b><color=#009960>○綠1</color>、<color=#808080>☆黑5</color>、<color=#D91ACC>✖粉紅7</color></b>這三種牌，你總共看到幾張？";
+                //<b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -432,7 +432,7 @@ public class Code777Manager : MonoBehaviour
                 answerText.text = answerKey + "張";
                 break;
             case 12:
-                //<b><color=#808080>☆黑3</color>和<color=#D91ACC>✖粉紅6</color></b>，何者較多？";
+                //<b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -444,11 +444,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑3</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅6</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑3</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" : "<b>一樣多</b>");
                 break;
             case 13:
-                //<b><color=#009960>○綠6</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                //<b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -460,11 +460,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠6</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃7</color>></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠6</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color>></b>" : "<b>一樣多</b>");
                 break;
             case 14:
-                //<b><color=#F2CC00>△黃2</color>和<color=#F2CC00>△黃7</color></b>，何者較多？";
+                //<b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -476,11 +476,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>△黃2</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃7</color>></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃2</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                 break;
             case 15:
-                //<b><color=#D91ACC>✖粉紅6</color>和<color=#009960>○綠6</color></b>，何者較多？";
+                //<b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -492,11 +492,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>✖粉紅6</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#009960>○綠6</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#009960>綠6</color></b>" : "<b>一樣多</b>");
                 break;
             case 16:
-                //<b><color=#0059FF>◇藍7</color>和其他顏色的7</b>，何者較多？";
+                //<b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -508,11 +508,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1> compareKey2) ? "<b><color=#0059FF>◇藍7</color></b>" :
+                answerText.text = (compareKey1> compareKey2) ? "<b><color=#0059FF>藍7</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>其他顏色7</color></b>" : "<b>一樣多</b>");
                 break;
             case 17:
-                //<b><color=#A64C26>□棕色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                //<b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -524,11 +524,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>□棕色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>◇藍色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>棕色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                 break;
             case 18:
-                //<b><color=#D90000>⎔紅色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                //<b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -540,11 +540,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>⎔紅色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>紅色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 19:
-                //<b><color=#009960>○綠色</color>和<color=#0059FF>◇藍色</color></b>，何者較多？";
+                //<b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -556,11 +556,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>◇藍色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                 break;
             case 20:
-                //<b><color=#F2CC00>△黃色</color>和<color=#D91ACC>✖粉紅色</color></b>，何者較多？";
+                //<b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -572,11 +572,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>△黃色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>✖粉紅色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 21:
-                //<b><color=#808080>☆黑色</color>和<color=#A64C26>□棕色</color></b>，何者較多？";
+                //<b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -588,11 +588,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>□棕色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>棕色</color></b>" : "<b>一樣多</b>");
                 break;
             case 22:
-                //<b><color=#808080>☆黑色</color>和<color=#D90000>⎔紅色</color></b>，何者較多？";
+                //<b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -604,11 +604,11 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>☆黑色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D90000>⎔紅色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#D90000>紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 23:
-                //<b><color=#009960>○綠色</color>和<color=#F2CC00>△黃色</color></b>，何者較多？";
+                //<b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
                 {
                     if (answerPlayer != i)
@@ -620,8 +620,8 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>○綠色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>△黃色</color></b>" : "<b>一樣多</b>");
+                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
                 break;
         }
 

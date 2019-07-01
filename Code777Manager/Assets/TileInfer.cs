@@ -44,14 +44,14 @@ public class TileInfer
                 _green1 = 1;
                 _yellow2 = 2;
                 _black3 = 3;
-                _brown4 = 4;
-                _red5 = 4;
+                _brown4 = 3;
+                _red5 = 3;
                 _black5 = 1;
                 _pink6 = 3;
                 _green6 = 3;
                 _yellow7 = 2;
                 _pink7 = 1;
-                _cyan7 = 4;
+                _cyan7 = 3;
                 break;
             default:
                 break;
