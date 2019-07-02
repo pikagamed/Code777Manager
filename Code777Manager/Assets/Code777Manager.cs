@@ -24,6 +24,7 @@ public class Code777Manager : MonoBehaviour
 
     public GameObject[] playerIcon;
     public TextMesh[] playerName;
+    public TextMesh[] possibleCount;
 
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
     public List<Tile> setTile = new List<Tile>(3); //設置中的Tile暫存器
@@ -99,7 +100,7 @@ public class Code777Manager : MonoBehaviour
             playerIcon[i].GetComponent<SpriteRenderer>().sprite = activePlayerIcon;
             playerName[i].text = activePlayerName;
 
-            Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, tileSprite, victoryLight);
+            Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, tileSprite, victoryLight, possibleCount[i]);
 
             activePlayer.Add(newPlayer);
 
@@ -461,7 +462,7 @@ public class Code777Manager : MonoBehaviour
                     }
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠6</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color>></b>" : "<b>一樣多</b>");
+                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                 break;
             case 14:
                 //<b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
@@ -624,6 +625,14 @@ public class Code777Manager : MonoBehaviour
                                              ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
                 break;
         }
+
+        activePlayer[(answerPlayer + 4) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
+        activePlayer[(answerPlayer + 3) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
+        activePlayer[(answerPlayer + 2) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
+        activePlayer[(answerPlayer + 1) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
+
+        //玩家0的輔助模式
+        activePlayer[0].TileLight(assistMode);
 
         answerPlayer += (answerPlayer == 4) ? (-4) : 1;
 

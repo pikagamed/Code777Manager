@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Infer { Possible, Confirm, Which }
-
 [System.Serializable]
 public class TileInfer
 {
@@ -36,26 +34,19 @@ public class TileInfer
     #endregion
 
     #region 建構方法
-    public TileInfer(Infer inferType)
+    public TileInfer(bool possible)
     {
-        switch (inferType)
-        {
-            case Infer.Possible:
-                _green1 = 1;
-                _yellow2 = 2;
-                _black3 = 3;
-                _brown4 = 3;
-                _red5 = 3;
-                _black5 = 1;
-                _pink6 = 3;
-                _green6 = 3;
-                _yellow7 = 2;
-                _pink7 = 1;
-                _cyan7 = 3;
-                break;
-            default:
-                break;
-        }
+        _green1 = possible ? 1 : 0 ;
+        _yellow2 = possible ? 2 : 0;
+        _black3 = possible ? 3 : 0;
+        _brown4 = possible ? 3 : 0;
+        _red5 = possible ? 3 : 0;
+        _black5 = possible ? 1 : 0;
+        _pink6 = possible ? 3 : 0;
+        _green6 = possible ? 3 : 0;
+        _yellow7 = possible ? 2 : 0;
+        _pink7 = possible ? 1 : 0;
+        _cyan7 = possible ? 3 : 0;
     }
     #endregion
 }

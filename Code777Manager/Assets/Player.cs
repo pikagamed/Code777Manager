@@ -26,6 +26,8 @@ public class Player
     private TileInfer _possibleNumber;
     private List<string> _possibleSet;
 
+    private TextMesh _possibleCount;
+
     #endregion
 
     #region 屬性設定
@@ -49,7 +51,7 @@ public class Player
     /// <param name="victory">分數</param>
     /// <param name="tilePosition">牌架於場景上位置</param>
     /// <param name="victoryLight">勝利燈在場景上名稱</param>
-    public Player(string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight)
+    public Player(string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight, TextMesh playerCount)
     {
         _name = name;
         _icon = icon;
@@ -61,6 +63,8 @@ public class Player
         _victoryLight[0] = GameObject.Find(victoryLight[0]);
         _victoryLight[1] = GameObject.Find(victoryLight[1]);
         _victoryLight[2] = GameObject.Find(victoryLight[2]);
+
+        _possibleCount = playerCount;
     }
 
     #endregion
@@ -80,7 +84,7 @@ public class Player
         _tileSprite[1].GetComponent<SpriteRenderer>().sprite = tile1.image;
         _tileSprite[2].GetComponent<SpriteRenderer>().sprite = tile2.image;
 
-        _possibleNumber = new TileInfer(Infer.Possible);
+        _possibleNumber = new TileInfer(true);
         PossibleSetReset();
     }
 
@@ -331,6 +335,7 @@ public class Player
         }
 
         _possibleSet = possibleSet;
+        _possibleCount.text = _possibleSet.Count.ToString();
     }
 
     /// <summary>
@@ -423,8 +428,11 @@ public class Player
         }
 
         bool answerKeyCheck;   //檢查自己牌架問題的真值 問題1~問題7適用
+        bool conditionCheck;  //複雜條件(或簡單條件也適用)下判斷自己是否達成與否
         int checkNumberKey; //檢查自己絕對數字總和 問題1、問題2適用
-        bool complicatedCheck;
+        int[] checkNumberColorKey = new int[7]; //統計顏色及數字用的陣列
+        int compareTileKey1;
+        int compareTileKey2;
 
         //輸入的數字為possibleNumber取出的內容為準
         int[] possibleTiles = new int[] { _possibleNumber.G1, _possibleNumber.Y2, _possibleNumber.K3, _possibleNumber.B4, _possibleNumber.R5, _possibleNumber.K5,
@@ -436,7 +444,6 @@ public class Player
         switch (questionId)
         {
             case 1: //". 有多少個牌架上的牌，三個數字總和是18以上？";
-                    //若自己所看到的數量<回答者看到的數量，自己的三個數字總和在18以上，否則不到18(即17以下)
                 #region 問題1的判斷
                 //true：自己的rack總和在18以上；false：自己的rack總和在17以下
                 answerKeyCheck = ((checkRack[0].reachEighteen ? 1 : 0) + (checkRack[1].reachEighteen ? 1 : 0) + (checkRack[2].reachEighteen ? 1 : 0)) < answerKey;
@@ -462,6 +469,7 @@ public class Player
                             if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
                             tile[2] = tile2;
+                            gotTiles[tile2]++;
 
                             //INSERT SetString
                             string setString = "";
@@ -487,8 +495,13 @@ public class Player
                                     setString = setString + "-";
                             }
 
-                            if ((answerKeyCheck && checkNumberKey < 18) || (!answerKeyCheck && checkNumberKey >= 18)) continue; //answerKeyCheck為true表示自己總和在18以上，為false表示自己總和在17以下
-                            if ( _possibleSet.Contains(setString)  ) possibleSet.Add(setString); //只有在原本參考中的可能性裡存在的組合，才會被保留下來
+                            conditionCheck = (checkNumberKey >= 18);
+                            //answerKeyCheck為true表示自己總和在18以上，為false表示自己總和在17以下
+                            //conditionCheck為true表示此組檢驗在18以上，為false表示此組檢驗總和在17以下
+                            //兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
                         }
                         gotTiles[tile1]--;  //TILE用完記得歸還
                     }
@@ -498,7 +511,6 @@ public class Player
                 break;
             case 2: //". 有多少個牌架上的牌，三個數字總和是12以下？";
                 #region 問題2的判斷
-                //true：自己的rack總和在12以下；false：自己的rack總和在13以上
                 answerKeyCheck = ((checkRack[0].untilTwelve ? 1 : 0) + (checkRack[1].untilTwelve ? 1 : 0) + (checkRack[2].untilTwelve ? 1 : 0)) < answerKey;
                 for (int tile0 = 0; tile0 < 11; tile0++)
                 {
@@ -522,6 +534,7 @@ public class Player
                             if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
                             tile[2] = tile2;
+                            gotTiles[tile2]++;
 
                             //INSERT SetString
                             string setString = "";
@@ -547,8 +560,12 @@ public class Player
                                     setString = setString + "-";
                             }
 
-                            if ((answerKeyCheck && checkNumberKey >12) || (!answerKeyCheck && checkNumberKey <= 12)) continue; //answerKeyCheck為true表示自己總和在12以下，為false表示自己總和在13以上
-                            if (_possibleSet.Contains(setString)) possibleSet.Add(setString); //只有在原本參考中的可能性裡存在的組合，才會被保留下來
+                            conditionCheck = (checkNumberKey <= 12);
+                            //conditionCheck為true表示此組檢驗在12以下，為false表示此組檢驗總和在13以
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
                         }
                         gotTiles[tile1]--;  //TILE用完記得歸還
                     }
@@ -558,7 +575,6 @@ public class Player
                 break;
             case 3: //". 有多少個牌架上的牌，出現不同顏色的相同數字？";
                 #region 問題3的判斷
-                //true：自己有不同顏色的相同數字；false：自己沒有不同顏色的相同數字
                 answerKeyCheck = ((checkRack[0].sameNumberDifColor ? 1 : 0) + (checkRack[1].sameNumberDifColor ? 1 : 0) + (checkRack[2].sameNumberDifColor ? 1 : 0)) < answerKey;
                 for (int tile0 = 0; tile0 < 11; tile0++)
                 {
@@ -582,10 +598,10 @@ public class Player
                             if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
                             tile[2] = tile2;
+                            gotTiles[tile2]++;
 
                             //INSERT SetString
                             string setString = "";
-                            checkNumberKey = 0;
 
                             for (int x = 0; x < 3; x++)
                             {
@@ -606,12 +622,15 @@ public class Player
                                 if (x != 2)
                                     setString = setString + "-";
                             }
-                            //5R和5K同時有1以上、6P和6G同時有1以上、7Y7P7C三者中同時有1以上
+                            //5R和5K同時有1以上、或6P和6G同時有1以上、或7Y7P7C三者中兩者同時有1以上
                             //即 (5R>0且5K>0) 或 (6P>0且6G>0) 或 (7Y>0且7P>0) 或 (7Y>0且7C>0) 或 (7P>0且7C>0)
 
-                            if( !answerKeyCheck &&  ( (gotTiles[4]>=1&& gotTiles[5]>=1)|| (gotTiles[4] >= 1 && gotTiles[5] >= 1) ))
+                            conditionCheck = (gotTiles[4]>=1&& gotTiles[5] >= 1)|| (gotTiles[6] >= 1 && gotTiles[7] >= 1)|| (gotTiles[8] >= 1 && gotTiles[9] >= 1)|| (gotTiles[8] >= 1 && gotTiles[10] >= 1)|| (gotTiles[9] >= 1 && gotTiles[10] >= 1);
 
-                            if (_possibleSet.Contains(setString)) possibleSet.Add(setString); //只有在原本參考中的可能性裡存在的組合，才會被保留下來
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
                         }
                         gotTiles[tile1]--;  //TILE用完記得歸還
                     }
@@ -621,181 +640,1627 @@ public class Player
                 break;
             case 4: //". 有多少個牌架上的牌，出現三個不同顏色的數字？";
                 #region 問題4的判斷
+                answerKeyCheck = ((checkRack[0].threeColor ? 1 : 0) + (checkRack[1].threeColor ? 1 : 0) + (checkRack[2].threeColor ? 1 : 0)) < answerKey;
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //1G+6G、2Y+7Y、3K+5K、4B、5R、6P+7P、7C 七種顏色每一種顏色都不超過一個(只要任意一種有兩個，就沒有三種顏色)
+                            conditionCheck = (gotTiles[0]+gotTiles[7]<=1) && (gotTiles[1] + gotTiles[8] <= 1) && (gotTiles[2] + gotTiles[5] <= 1) && (gotTiles[3]<= 1) && (gotTiles[4]<= 1) && (gotTiles[6] + gotTiles[9] <= 1) && (gotTiles[10] <= 1);
+
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 5: //". 有多少個牌架上的牌，三個數字皆是奇數或皆是偶數？";
                 #region 問題5的判斷
+                answerKeyCheck = ((checkRack[0].allOddEven ? 1 : 0) + (checkRack[1].allOddEven ? 1 : 0) + (checkRack[2].allOddEven ? 1 : 0)) < answerKey;
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //1G+3K+5R+5K+7Y+7P+7C合計有3張，或者2Y+4B+6P+6G合計有3張
+                            conditionCheck = (gotTiles[0] + gotTiles[2] + gotTiles[4] + gotTiles[5] + gotTiles[8] + gotTiles[9] + gotTiles[10] == 3) || (gotTiles[1] + gotTiles[3] + gotTiles[6] + gotTiles[7] == 3);
+
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 6: //". 有多少個牌架上的牌，出現相同顏色的相同數字？";
                 #region 問題6的判斷
+                answerKeyCheck = ((checkRack[0].sameColorNumber ? 1 : 0) + (checkRack[1].sameColorNumber ? 1 : 0) + (checkRack[2].sameColorNumber ? 1 : 0)) < answerKey;
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //2Y、3K、4B、5R、6P、6G、7Y、7C任何一種在2張以上
+                            conditionCheck = (gotTiles[1] >= 2) || (gotTiles[2] >= 2) || (gotTiles[3] >= 2) || (gotTiles[4] >= 2) || (gotTiles[6] >= 2) || (gotTiles[7] >= 2) || (gotTiles[8] >= 2) || (gotTiles[10] >= 2);
+
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 7: //". 有多少個牌架上的牌，三個數字是連續的數字？";
                 #region 問題7的判斷
+                answerKeyCheck = ((checkRack[0].consecutiveNumber ? 1 : 0) + (checkRack[1].consecutiveNumber ? 1 : 0) + (checkRack[2].consecutiveNumber ? 1 : 0)) < answerKey;
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
 
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //這判斷有點複雜……
+                            //(1G=1、2Y=1、3K=1) 或 (2Y=1、3K=1、4B=1) 或 (3K=1、4B=1、5R+5K=1) 或 ( 5R+5K=1、6P+6G=1、7Y+7P+7C=1 )
+                            conditionCheck = (gotTiles[0] == 1 && gotTiles[1] == 1 && gotTiles[2] == 1) ||
+                                                        (gotTiles[1] == 1 && gotTiles[2] == 1 && gotTiles[3] == 1) ||
+                                                        (gotTiles[2] == 1 && gotTiles[3] == 1 && gotTiles[4] + gotTiles[5] == 1) ||
+                                                        (gotTiles[3] == 1 && gotTiles[4] + gotTiles[5] == 1 && gotTiles[6] + gotTiles[7] == 1) ||
+                                                        (gotTiles[4] + gotTiles[5] == 1 && gotTiles[6] + gotTiles[7] == 1 && gotTiles[8] + gotTiles[9] + gotTiles[10] == 1);
+
+
+                            //answerKeyCheck和conditionCheck兩者邏輯值要相同，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if ((answerKeyCheck == conditionCheck) && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 8: //". 你看到多少種顏色的數字牌？";
                 #region 問題8的判斷
+                for(int playerIndex=0; playerIndex<3; playerIndex++)
+                {
+                    for(int tileIndex=0; tileIndex<3; tileIndex++)
+                    {
+                        switch (checkRack[playerIndex].tiles[tileIndex].color)
+                        {
+                            case "G": checkNumberColorKey[0]++; break;
+                            case "Y": checkNumberColorKey[1]++; break;
+                            case "K": checkNumberColorKey[2]++; break;
+                            case "B": checkNumberColorKey[3]++; break;
+                            case "R": checkNumberColorKey[4]++; break;
+                            case "P": checkNumberColorKey[5]++; break;
+                            case "C": checkNumberColorKey[6]++; break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            conditionCheck = (( ( checkNumberColorKey[0]+ gotTiles[0] + gotTiles[7] >0) ? 1 : 0 ) +
+                                                            ((checkNumberColorKey[1] + gotTiles[1] + gotTiles[8] > 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[2] + gotTiles[2] + gotTiles[5] > 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[3] + gotTiles[3] > 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[4] + gotTiles[4] > 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[5] + gotTiles[6] + gotTiles[9] > 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[6] + gotTiles[10] > 0) ? 1 : 0) ) == answerKey;
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 9: //". 有幾種顏色出現了三次以上？";
                 #region 問題9的判斷
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch (checkRack[playerIndex].tiles[tileIndex].color)
+                        {
+                            case "G": checkNumberColorKey[0]++; break;
+                            case "Y": checkNumberColorKey[1]++; break;
+                            case "K": checkNumberColorKey[2]++; break;
+                            case "B": checkNumberColorKey[3]++; break;
+                            case "R": checkNumberColorKey[4]++; break;
+                            case "P": checkNumberColorKey[5]++; break;
+                            case "C": checkNumberColorKey[6]++; break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            conditionCheck = (((checkNumberColorKey[0] + gotTiles[0] + gotTiles[7] >=3 ) ? 1 : 0) +
+                                                            ((checkNumberColorKey[1] + gotTiles[1] + gotTiles[8] >= 3) ? 1 : 0) +
+                                                            ((checkNumberColorKey[2] + gotTiles[2] + gotTiles[5] >= 3) ? 1 : 0) +
+                                                            ((checkNumberColorKey[3] + gotTiles[3] >= 3) ? 1 : 0) +
+                                                            ((checkNumberColorKey[4] + gotTiles[4] >= 3) ? 1 : 0) +
+                                                            ((checkNumberColorKey[5] + gotTiles[6] + gotTiles[9] >= 3) ? 1 : 0) +
+                                                            ((checkNumberColorKey[6] + gotTiles[10] >= 3) ? 1 : 0)) == answerKey;
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 10: //". 有幾種數字完全沒有出現？";
                 #region 問題10的判斷
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch (checkRack[playerIndex].tiles[tileIndex].number)
+                        {
+                            case 1: checkNumberColorKey[0]++; break;
+                            case 2: checkNumberColorKey[1]++; break;
+                            case 3: checkNumberColorKey[2]++; break;
+                            case 4: checkNumberColorKey[3]++; break;
+                            case 5: checkNumberColorKey[4]++; break;
+                            case 6: checkNumberColorKey[5]++; break;
+                            case 7: checkNumberColorKey[6]++; break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            conditionCheck = (((checkNumberColorKey[0] + gotTiles[0] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[1] + gotTiles[1] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[2] + gotTiles[2] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[3] + gotTiles[3] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[4] + gotTiles[4] + gotTiles[5] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[5] + gotTiles[6] + gotTiles[7] == 0) ? 1 : 0) +
+                                                            ((checkNumberColorKey[6] + gotTiles[8] + gotTiles[9] +gotTiles[10] == 0) ? 1 : 0)) == answerKey;
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 11: //". 綠1、黑5、粉紅7這三種牌，你總共看到幾張？";
                 #region 問題11的判斷
+                checkNumberKey = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number.ToString() + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            default: checkNumberKey += 0; break;
+                            case "1G": checkNumberKey++; break;
+                            case "5K": checkNumberKey++; break;
+                            case "7P": checkNumberKey++; break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            conditionCheck = ( ( checkNumberKey + gotTiles[0] + gotTiles[5] + gotTiles[9] ) == answerKey);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 12: //". 黑3和粉紅6，何者較多？";
                 #region 問題12的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "3K": compareTileKey1++; break;
+                            case "6P": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[2] > compareTileKey2 + gotTiles[6]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[2] < compareTileKey2 + gotTiles[6]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[2] == compareTileKey2 + gotTiles[6]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 13: //". 綠6和黃7，何者較多？";
                 #region 問題13的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "6G": compareTileKey1++; break;
+                            case "7Y": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[7] > compareTileKey2 + gotTiles[8]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[7] < compareTileKey2 + gotTiles[8]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[7] == compareTileKey2 + gotTiles[8]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 14: //". 黃2和黃7，何者較多？";
                 #region 問題14的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "2Y": compareTileKey1++; break;
+                            case "7Y": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[1] > compareTileKey2 + gotTiles[8]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[1] < compareTileKey2 + gotTiles[8]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[1] == compareTileKey2 + gotTiles[8]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 15: //". 粉紅6和綠6，何者較多？";
                 #region 問題15的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "6P": compareTileKey1++; break;
+                            case "6G": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[6] > compareTileKey2 + gotTiles[7]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[6] < compareTileKey2 + gotTiles[7]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[6] == compareTileKey2 + gotTiles[7]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 16: //". 藍7和其他顏色的7，何者較多？";
                 #region 問題16的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].number + checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "7C": compareTileKey1++; break;
+                            case "7Y": compareTileKey2++; break;
+                            case "7P": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[10] > compareTileKey2 + gotTiles[8] + gotTiles[8]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[10] < compareTileKey2 + gotTiles[8] + gotTiles[9]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[10] == compareTileKey2 + gotTiles[8] + gotTiles[9]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 17: //". 棕色和藍色，何者較多？";
                 #region 問題17的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "B": compareTileKey1++; break;
+                            case "C": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[3] > compareTileKey2 + gotTiles[10]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[3] < compareTileKey2 + gotTiles[10]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[3] == compareTileKey2 +  gotTiles[10]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 18: //". 紅色和粉紅色，何者較多？";
                 #region 問題18的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "R": compareTileKey1++; break;
+                            case "P": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[4] > compareTileKey2 + gotTiles[6] + gotTiles[9] ) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[4] < compareTileKey2 + gotTiles[6] + gotTiles[9]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[4] == compareTileKey2 + gotTiles[6] + gotTiles[9]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 19: //". 綠色和藍色，何者較多？";
                 #region 問題19的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "G": compareTileKey1++; break;
+                            case "C": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[0] + gotTiles[7] > compareTileKey2 + gotTiles[10]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[0] + gotTiles[7] < compareTileKey2 + gotTiles[10]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[0] + gotTiles[7] == compareTileKey2 + gotTiles[10]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 20: //". 黃色和粉紅色，何者較多？";
                 #region 問題20的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "Y": compareTileKey1++; break;
+                            case "P": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[1] + gotTiles[8] > compareTileKey2 + gotTiles[6] + gotTiles[9]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[1] + gotTiles[8] < compareTileKey2 + gotTiles[6] + gotTiles[9]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[1] + gotTiles[8] == compareTileKey2 + gotTiles[6] + gotTiles[9]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 21: //". 黑色和棕色，何者較多？";
                 #region 問題21的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "K": compareTileKey1++; break;
+                            case "B": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[2] + gotTiles[5] > compareTileKey2 + gotTiles[3]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[2] + gotTiles[5] < compareTileKey2 + gotTiles[3]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[2] + gotTiles[5] == compareTileKey2 + gotTiles[3]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 22: //". 黑色和紅色，何者較多？";
                 #region 問題22的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "K": compareTileKey1++; break;
+                            case "R": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[2] + gotTiles[5] > compareTileKey2 + gotTiles[4]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[2] + gotTiles[5] < compareTileKey2 + gotTiles[4]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[2] + gotTiles[5] == compareTileKey2 + gotTiles[4]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
             case 23: //". 綠色和黃色，何者較多？";
                 #region 問題23的判斷
+                //compareKey1為true時，表示前者較多；compareKey2為true時，表示後者較多；若都為false則表示一樣多
+                compareTileKey1 = 0;
+                compareTileKey2 = 0;
+                for (int playerIndex = 0; playerIndex < 3; playerIndex++)
+                {
+                    for (int tileIndex = 0; tileIndex < 3; tileIndex++)
+                    {
+                        switch ((checkRack[playerIndex].tiles[tileIndex].color))
+                        {
+                            case "G": compareTileKey1++; break;
+                            case "Y": compareTileKey2++; break;
+                            default: break;
+                        }
+                    }
+                }
 
+                for (int tile0 = 0; tile0 < 11; tile0++)
+                {
+                    //1st tile
+                    if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                    tile[0] = tile0;
+                    gotTiles[tile0]++;
+
+                    for (int tile1 = tile0; tile1 < 11; tile1++)
+                    {
+                        //2nd tile
+                        if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                        tile[1] = tile1;
+                        gotTiles[tile1]++;
+
+                        for (int tile2 = tile1; tile2 < 11; tile2++)
+                        {
+                            //3rd tile
+                            if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
+
+                            tile[2] = tile2;
+                            gotTiles[tile2]++;
+
+                            //INSERT SetString
+                            string setString = "";
+
+                            for (int x = 0; x < 3; x++)
+                            {
+                                switch (tile[x])
+                                {
+                                    case 0: setString = setString + "1G"; break;
+                                    case 1: setString = setString + "2Y"; break;
+                                    case 2: setString = setString + "3K"; break;
+                                    case 3: setString = setString + "4B"; break;
+                                    case 4: setString = setString + "5R"; break;
+                                    case 5: setString = setString + "5K"; break;
+                                    case 6: setString = setString + "6P"; break;
+                                    case 7: setString = setString + "6G"; break;
+                                    case 8: setString = setString + "7Y"; break;
+                                    case 9: setString = setString + "7P"; break;
+                                    case 10: setString = setString + "7C"; break;
+                                }
+                                if (x != 2)
+                                    setString = setString + "-";
+                            }
+
+                            //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
+                            conditionCheck = ((compareTileKey1 + gotTiles[0] + gotTiles[7] > compareTileKey2 + gotTiles[1] + gotTiles[8]) && compareKey1) ||
+                                                        ((compareTileKey1 + gotTiles[0] + gotTiles[7] < compareTileKey2 + gotTiles[1] + gotTiles[8]) && compareKey2) ||
+                                                        ((compareTileKey1 + gotTiles[0] + gotTiles[7] == compareTileKey2 + gotTiles[1] + gotTiles[8]) && !compareKey1 && !compareKey2);
+
+                            //conditionCheck需要為True，並原本參考中的可能性裡存在的組合，才會被保留下來
+                            if (conditionCheck && _possibleSet.Contains(setString)) possibleSet.Add(setString);
+
+                            gotTiles[tile2]--;  //TILE用完記得歸還
+                        }
+                        gotTiles[tile1]--;  //TILE用完記得歸還
+                    }
+                    gotTiles[tile0]--;  //TILE用完記得歸還
+                }
                 #endregion
                 break;
 
         }
 
-
-
-
-
-
-
-
-
-
-        for (int tile0 = 0; tile0 < 11; tile0++)
-        {
-            //1st tile
-            if (gotTiles[tile0] >= possibleTiles[tile0]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
-
-            tile[0] = tile0;
-            gotTiles[tile0]++;
-
-            for (int tile1 = tile0; tile1 < 11; tile1++)
-            {
-                //2nd tile
-                if (gotTiles[tile1] >= possibleTiles[tile1]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
-
-                tile[1] = tile1;
-                gotTiles[tile1]++;
-
-                for (int tile2 = tile1; tile2 < 11; tile2++)
-                {
-                    //3rd tile
-                    if (gotTiles[tile2] >= possibleTiles[tile2]) continue;  //如果這張數字牌的已取Tile數已到達上限，要跳過這個數字牌
-
-                    tile[2] = tile2;
-
-                    //INSERT SetString
-                    string setString = "";
-                    for (int x = 0; x < 3; x++)
-                    {
-                        switch (tile[x])
-                        {
-                            case 0: setString = setString + "1G"; break;
-                            case 1: setString = setString + "2Y"; break;
-                            case 2: setString = setString + "3K"; break;
-                            case 3: setString = setString + "4B"; break;
-                            case 4: setString = setString + "5R"; break;
-                            case 5: setString = setString + "5K"; break;
-                            case 6: setString = setString + "6P"; break;
-                            case 7: setString = setString + "6G"; break;
-                            case 8: setString = setString + "7Y"; break;
-                            case 9: setString = setString + "7P"; break;
-                            case 10: setString = setString + "7C"; break;
-                        }
-                        if (x != 2)
-                            setString = setString + "-";
-                    }
-
-                    if (_possibleSet.Contains(setString)) possibleSet.Add(setString); //只有在原本參考中的可能性裡存在的組合，才會被保留下來
-                }
-                gotTiles[tile1]--;  //TILE用完記得歸還
-            }
-            gotTiles[tile0]--;  //TILE用完記得歸還
-        }
-
         _possibleSet = possibleSet;
+        _possibleCount.text = _possibleSet.Count.ToString();
 
-
-
-
-        if ( questionId <=11 )
+        //過濾自己可能拿取的最大數量
+        TileInfer assignPossibleSet = new TileInfer(false); //一進場給予最大可能數值，一旦可能數量減少就會遞減，不會再增加
+        int[] assignPossible;
+        for ( int i=0; i<_possibleSet.Count; i++ )
         {
+            assignPossible = new int[11];
+            string[] splitTiles = _possibleSet[i].Split('-');
+            for(int j=0;j<splitTiles.Length;j++)
+            {
+                switch (splitTiles[j])
+                {
+                    case "1G": assignPossible[0]++;  break;
+                    case "2Y": assignPossible[1]++; break;
+                    case "3K": assignPossible[2]++; break;
+                    case "4B": assignPossible[3]++; break;
+                    case "5R": assignPossible[4]++; break;
+                    case "5K": assignPossible[5]++; break;
+                    case "6P": assignPossible[6]++; break;
+                    case "6G": assignPossible[7]++; break;
+                    case "7Y": assignPossible[8]++; break;
+                    case "7P": assignPossible[9]++; break;
+                    case "7C": assignPossible[10]++; break;
+                }
+            }
 
+            if (assignPossible[0] > assignPossibleSet.G1) assignPossibleSet.G1 = assignPossible[0];
+            if (assignPossible[1] > assignPossibleSet.Y2) assignPossibleSet.Y2 = assignPossible[1];
+            if (assignPossible[2] > assignPossibleSet.K3) assignPossibleSet.K3 = assignPossible[2];
+            if (assignPossible[3] > assignPossibleSet.B4) assignPossibleSet.B4 = assignPossible[3];
+            if (assignPossible[4] > assignPossibleSet.R5) assignPossibleSet.R5 = assignPossible[4];
+            if (assignPossible[5] > assignPossibleSet.K5) assignPossibleSet.K5 = assignPossible[5];
+            if (assignPossible[6] > assignPossibleSet.P6) assignPossibleSet.P6 = assignPossible[6];
+            if (assignPossible[7] > assignPossibleSet.G6) assignPossibleSet.G6 = assignPossible[7];
+            if (assignPossible[8] > assignPossibleSet.Y7) assignPossibleSet.Y7 = assignPossible[8];
+            if (assignPossible[9] > assignPossibleSet.P7) assignPossibleSet.P7 = assignPossible[9];
+            if (assignPossible[10] > assignPossibleSet.C7) assignPossibleSet.C7 = assignPossible[10];
         }
-        else
-        {
 
-        }
+        if (assignPossibleSet.G1 < _possibleNumber.G1) _possibleNumber.G1 = assignPossibleSet.G1;
+        if (assignPossibleSet.Y2 < _possibleNumber.Y2) _possibleNumber.Y2 = assignPossibleSet.Y2;
+        if (assignPossibleSet.K3 < _possibleNumber.K3) _possibleNumber.K3 = assignPossibleSet.K3;
+        if (assignPossibleSet.B4 < _possibleNumber.B4) _possibleNumber.B4 = assignPossibleSet.B4;
+        if (assignPossibleSet.R5 < _possibleNumber.R5) _possibleNumber.R5 = assignPossibleSet.R5;
+        if (assignPossibleSet.K5 < _possibleNumber.K5) _possibleNumber.K5 = assignPossibleSet.K5;
+        if (assignPossibleSet.P6 < _possibleNumber.P6) _possibleNumber.P6 = assignPossibleSet.P6;
+        if (assignPossibleSet.G6 < _possibleNumber.G6) _possibleNumber.G6 = assignPossibleSet.G6;
+        if (assignPossibleSet.Y7 < _possibleNumber.Y7) _possibleNumber.Y7 = assignPossibleSet.Y7;
+        if (assignPossibleSet.P7 < _possibleNumber.P7) _possibleNumber.P7 = assignPossibleSet.P7;
+        if (assignPossibleSet.C7 < _possibleNumber.C7) _possibleNumber.C7 = assignPossibleSet.C7;
+
     }
 
     #endregion
