@@ -22,8 +22,10 @@ public class Code777Manager : MonoBehaviour
 
     #endregion
 
-    public GameObject[] playerIcon;
-    public TextMesh[] playerName;
+    //public GameObject[] playerIcon;
+    //public TextMesh[] playerName;
+    public Image[] playerIcon;
+    public Text[] playerName;
     public TextMesh[] possibleCount;
 
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
@@ -32,7 +34,8 @@ public class Code777Manager : MonoBehaviour
     public List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
 
     public bool assistMode = true;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
-    public GameObject[] assistTile;
+    //public GameObject[] assistTile;
+    public Image[] assistTile;
 
     public List<Player> activePlayer;
 
@@ -48,6 +51,9 @@ public class Code777Manager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        questionText.text = "";
+        answerText.text = "";
+        speakerText.text = "";
 
         #region  初始化TILE堆
         initialTile[0] = new Tile(1, "G", images[0]);
@@ -97,7 +103,7 @@ public class Code777Manager : MonoBehaviour
             string[] tileSprite = new string[] { "Player" + i + "Tile0", "Player" + i + "Tile1", "Player" + i + "Tile2" };
             string[] victoryLight = new string[] { "Player" + i + "Victory0", "Player" + i + "Victory1", "Player" + i + "Victory2" };
 
-            playerIcon[i].GetComponent<SpriteRenderer>().sprite = activePlayerIcon;
+            playerIcon[i].GetComponent<Image>().sprite = activePlayerIcon;
             playerName[i].text = activePlayerName;
 
             Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, tileSprite, victoryLight, possibleCount[i]);

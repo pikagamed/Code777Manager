@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 enum TileType :int
 {  G1=0, Y2=1, K3=2, B4=3, R5=4, K5=5, P6=6, G6=7, Y7=8, P7=9, C7=10 }
@@ -20,8 +21,8 @@ public class Player
     private int _victory = 0;
     private Rack _rack;
 
-    private GameObject[] _tileSprite = new GameObject[3];
-    private GameObject[] _victoryLight = new GameObject[3];
+    private Image[] _tileSprite = new Image[3];
+    private Image[] _victoryLight = new Image[3];
 
     private TileInfer _possibleNumber;
     private List<string> _possibleSet;
@@ -57,12 +58,12 @@ public class Player
         _icon = icon;
         _playerId = playerId;
         _victory = victory;
-        _tileSprite[0] = GameObject.Find(tileSprite[0]);
-        _tileSprite[1] = GameObject.Find(tileSprite[1]);
-        _tileSprite[2] = GameObject.Find(tileSprite[2]);
-        _victoryLight[0] = GameObject.Find(victoryLight[0]);
-        _victoryLight[1] = GameObject.Find(victoryLight[1]);
-        _victoryLight[2] = GameObject.Find(victoryLight[2]);
+        _tileSprite[0] = GameObject.Find(tileSprite[0]).GetComponent<Image>();
+        _tileSprite[1] = GameObject.Find(tileSprite[1]).GetComponent<Image>();
+        _tileSprite[2] = GameObject.Find(tileSprite[2]).GetComponent<Image>();
+        _victoryLight[0] = GameObject.Find(victoryLight[0]).GetComponent<Image>();
+        _victoryLight[1] = GameObject.Find(victoryLight[1]).GetComponent<Image>();
+        _victoryLight[2] = GameObject.Find(victoryLight[2]).GetComponent<Image>();
 
         _possibleCount = playerCount;
     }
@@ -80,9 +81,9 @@ public class Player
     public void NewRack(Tile tile0, Tile tile1, Tile tile2)
     {
         _rack = new Rack(tile0, tile1, tile2);
-        _tileSprite[0].GetComponent<SpriteRenderer>().sprite = tile0.image;
-        _tileSprite[1].GetComponent<SpriteRenderer>().sprite = tile1.image;
-        _tileSprite[2].GetComponent<SpriteRenderer>().sprite = tile2.image;
+        _tileSprite[0].GetComponent<Image>().sprite = tile0.image;
+        _tileSprite[1].GetComponent<Image>().sprite = tile1.image;
+        _tileSprite[2].GetComponent<Image>().sprite = tile2.image;
 
         _possibleNumber = new TileInfer(true);
         PossibleSetReset();
@@ -348,34 +349,34 @@ public class Player
         {
             if (assistMode)
             {
-                if (_possibleNumber.G1 < 1) GameObject.Find("AssistTile1G").GetComponent<SpriteRenderer>().color = new Vector4(0.25F,0.25F,0.25F,1F);
-                if (_possibleNumber.Y2 < 1) GameObject.Find("AssistTile2Y_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.Y2 < 2) GameObject.Find("AssistTile2Y_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.K3 < 1) GameObject.Find("AssistTile3K_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.K3 < 2) GameObject.Find("AssistTile3K_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.K3 < 3) GameObject.Find("AssistTile3K_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.B4 < 1) GameObject.Find("AssistTile4B_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.B4 < 2) GameObject.Find("AssistTile4B_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.B4 < 3) GameObject.Find("AssistTile4B_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.B4 < 4) GameObject.Find("AssistTile4B_4").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.R5 < 1) GameObject.Find("AssistTile5R_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.R5 < 2) GameObject.Find("AssistTile5R_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.R5 < 3) GameObject.Find("AssistTile5R_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.R5 < 4) GameObject.Find("AssistTile5R_4").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.K5 < 1) GameObject.Find("AssistTile5K").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.P6 < 1) GameObject.Find("AssistTile6P_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.P6 < 2) GameObject.Find("AssistTile6P_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.P6 < 3) GameObject.Find("AssistTile6P_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.G6 < 1) GameObject.Find("AssistTile6G_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.G6 < 2) GameObject.Find("AssistTile6G_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.G6 < 3) GameObject.Find("AssistTile6G_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.Y7 < 1) GameObject.Find("AssistTile7Y_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.Y7 < 2) GameObject.Find("AssistTile7Y_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.P7 < 1) GameObject.Find("AssistTile7P").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.C7 < 1) GameObject.Find("AssistTile7C_1").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.C7 < 2) GameObject.Find("AssistTile7C_2").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.C7 < 3) GameObject.Find("AssistTile7C_3").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-                if (_possibleNumber.C7 < 4) GameObject.Find("AssistTile7C_4").GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.G1 < 1) GameObject.Find("AssistTile1G").GetComponent<Image>().color = new Vector4(0.25F,0.25F,0.25F,1F);
+                if (_possibleNumber.Y2 < 1) GameObject.Find("AssistTile2Y_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.Y2 < 2) GameObject.Find("AssistTile2Y_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.K3 < 1) GameObject.Find("AssistTile3K_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.K3 < 2) GameObject.Find("AssistTile3K_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.K3 < 3) GameObject.Find("AssistTile3K_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.B4 < 1) GameObject.Find("AssistTile4B_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.B4 < 2) GameObject.Find("AssistTile4B_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.B4 < 3) GameObject.Find("AssistTile4B_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.B4 < 4) GameObject.Find("AssistTile4B_4").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.R5 < 1) GameObject.Find("AssistTile5R_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.R5 < 2) GameObject.Find("AssistTile5R_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.R5 < 3) GameObject.Find("AssistTile5R_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.R5 < 4) GameObject.Find("AssistTile5R_4").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.K5 < 1) GameObject.Find("AssistTile5K").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.P6 < 1) GameObject.Find("AssistTile6P_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.P6 < 2) GameObject.Find("AssistTile6P_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.P6 < 3) GameObject.Find("AssistTile6P_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.G6 < 1) GameObject.Find("AssistTile6G_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.G6 < 2) GameObject.Find("AssistTile6G_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.G6 < 3) GameObject.Find("AssistTile6G_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.Y7 < 1) GameObject.Find("AssistTile7Y_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.Y7 < 2) GameObject.Find("AssistTile7Y_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.P7 < 1) GameObject.Find("AssistTile7P").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.C7 < 1) GameObject.Find("AssistTile7C_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.C7 < 2) GameObject.Find("AssistTile7C_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.C7 < 3) GameObject.Find("AssistTile7C_3").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+                if (_possibleNumber.C7 < 4) GameObject.Find("AssistTile7C_4").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
             }
         }
     }
@@ -385,10 +386,10 @@ public class Player
     /// </summary>
     public void BecomeAnswerPlayer()
     {
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<SpriteRenderer>().color = new Vector4(1F, 0.75F, 0.75F, 1F);
-        _tileSprite[0].GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-        _tileSprite[1].GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-        _tileSprite[2].GetComponent<SpriteRenderer>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Vector4(1F, 0.75F, 0.75F, 1F);
+        _tileSprite[0].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        _tileSprite[1].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        _tileSprite[2].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
     }
 
     /// <summary>
@@ -396,10 +397,10 @@ public class Player
     /// </summary>
     public void NolongerAnswerPlayer()
     {
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<SpriteRenderer>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[0].GetComponent<SpriteRenderer>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[1].GetComponent<SpriteRenderer>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[2].GetComponent<SpriteRenderer>().color = new Vector4(1F, 1F, 1F, 1F);
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
+        _tileSprite[0].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
+        _tileSprite[1].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
+        _tileSprite[2].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
     }
 
     /// <summary>
