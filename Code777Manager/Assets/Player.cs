@@ -21,13 +21,13 @@ public class Player
     private int _victory = 0;
     private Rack _rack;
 
-    private Image[] _tileSprite = new Image[3];
-    private Image[] _victoryLight = new Image[3];
+    private GameObject[] _tileSprite = new GameObject[3];
+    private GameObject[] _victoryLight = new GameObject[3];
 
     private TileInfer _possibleNumber;
     private List<string> _possibleSet;
 
-    private TextMesh _possibleCount;
+    private Text _possibleCount;
 
     #endregion
 
@@ -52,18 +52,18 @@ public class Player
     /// <param name="victory">分數</param>
     /// <param name="tilePosition">牌架於場景上位置</param>
     /// <param name="victoryLight">勝利燈在場景上名稱</param>
-    public Player(string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight, TextMesh playerCount)
+    public Player(string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight, Text playerCount)
     {
         _name = name;
         _icon = icon;
         _playerId = playerId;
         _victory = victory;
-        _tileSprite[0] = GameObject.Find(tileSprite[0]).GetComponent<Image>();
-        _tileSprite[1] = GameObject.Find(tileSprite[1]).GetComponent<Image>();
-        _tileSprite[2] = GameObject.Find(tileSprite[2]).GetComponent<Image>();
-        _victoryLight[0] = GameObject.Find(victoryLight[0]).GetComponent<Image>();
-        _victoryLight[1] = GameObject.Find(victoryLight[1]).GetComponent<Image>();
-        _victoryLight[2] = GameObject.Find(victoryLight[2]).GetComponent<Image>();
+        _tileSprite[0] = GameObject.Find(tileSprite[0]);
+        _tileSprite[1] = GameObject.Find(tileSprite[1]);
+        _tileSprite[2] = GameObject.Find(tileSprite[2]);
+        _victoryLight[0] = GameObject.Find(victoryLight[0]);
+        _victoryLight[1] = GameObject.Find(victoryLight[1]);
+        _victoryLight[2] = GameObject.Find(victoryLight[2]);
 
         _possibleCount = playerCount;
     }
@@ -84,6 +84,8 @@ public class Player
         _tileSprite[0].GetComponent<Image>().sprite = tile0.image;
         _tileSprite[1].GetComponent<Image>().sprite = tile1.image;
         _tileSprite[2].GetComponent<Image>().sprite = tile2.image;
+
+
 
         _possibleNumber = new TileInfer(true);
         PossibleSetReset();
@@ -386,10 +388,15 @@ public class Player
     /// </summary>
     public void BecomeAnswerPlayer()
     {
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Vector4(1F, 0.75F, 0.75F, 1F);
-        _tileSprite[0].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-        _tileSprite[1].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
-        _tileSprite[2].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        //GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Color(1F, 0.75F, 0.75F, 1F);
+        //_tileSprite[0].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+        //_tileSprite[1].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+        //_tileSprite[2].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor( new Color(1F, 0.5F, 0.5F, 1F) ,0.2f, false, true);
+        _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
+        _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
+        _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
     }
 
     /// <summary>
@@ -397,10 +404,30 @@ public class Player
     /// </summary>
     public void NolongerAnswerPlayer()
     {
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[0].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[1].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
-        _tileSprite[2].GetComponent<Image>().color = new Vector4(1F, 1F, 1F, 1F);
+        //GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
+        //_tileSprite[0].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
+        //_tileSprite[1].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
+        //_tileSprite[2].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+        _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+        _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+        _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+    }
+
+    /// <summary>
+    /// 成為呼叫數字的玩家
+    /// </summary>
+    public void BecomeCallPlayer()
+    {
+        //GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().color = new Color(1F, 0.75F, 0.75F, 1F);
+        //_tileSprite[0].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+        //_tileSprite[1].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+        //_tileSprite[2].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
+
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor(new Color(1F, 0.5F, 0.5F, 1F), 0.2f, false, true);
+        _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
+        _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
+        _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
     }
 
     /// <summary>

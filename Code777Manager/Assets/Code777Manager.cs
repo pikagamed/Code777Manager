@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Code777Manager : MonoBehaviour
 {
-    public Sprite[] images;
+    public Sprite[] tileImages;
     int drawPlayer; //抽Player亂數
     int drawTile;   //抽TILE亂數
     int drawCard; //抽Card亂數
@@ -24,9 +24,9 @@ public class Code777Manager : MonoBehaviour
 
     //public GameObject[] playerIcon;
     //public TextMesh[] playerName;
-    public Image[] playerIcon;
+    public GameObject[] playerIcon;
     public Text[] playerName;
-    public TextMesh[] possibleCount;
+    public Text[] possibleCount;
 
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
     public List<Tile> setTile = new List<Tile>(3); //設置中的Tile暫存器
@@ -45,8 +45,18 @@ public class Code777Manager : MonoBehaviour
     public Text answerText;
     public Text speakerText;
 
-    public bool spaceKeyLock = true;
+    public Button startButton;
+    public Button callButton;
+    public Button passButton;
 
+    //操控控制項
+    public bool spaceKeyLock = true;
+    public bool[] answerTurn = new bool[5];
+
+    public static bool nextTurn = false;   //作為遊戲開始的開始叫用
+    public static bool callTurn = false;    //進入呼叫數字回合的開始叫用
+    public static bool playerCallTurn = false;  //進入玩家呼叫數字的回合開始叫用
+    public static bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
 
     // Start is called before the first frame update
     void Start()
@@ -56,34 +66,34 @@ public class Code777Manager : MonoBehaviour
         speakerText.text = "";
 
         #region  初始化TILE堆
-        initialTile[0] = new Tile(1, "G", images[0]);
-        initialTile[1] = new Tile(2, "Y", images[1]);
-        initialTile[2] = new Tile(2, "Y", images[1]);
-        initialTile[3] = new Tile(3, "K", images[2]);
-        initialTile[4] = new Tile(3, "K", images[2]);
-        initialTile[5] = new Tile(3, "K", images[2]);
-        initialTile[6] = new Tile(4, "B", images[3]);
-        initialTile[7] = new Tile(4, "B", images[3]);
-        initialTile[8] = new Tile(4, "B", images[3]);
-        initialTile[9] = new Tile(4, "B", images[3]);
-        initialTile[10] = new Tile(5, "R", images[4]);
-        initialTile[11] = new Tile(5, "R", images[4]);
-        initialTile[12] = new Tile(5, "R", images[4]);
-        initialTile[13] = new Tile(5, "R", images[4]);
-        initialTile[14] = new Tile(5, "K", images[5]);
-        initialTile[15] = new Tile(6, "P", images[6]);
-        initialTile[16] = new Tile(6, "P", images[6]);
-        initialTile[17] = new Tile(6, "P", images[6]);
-        initialTile[18] = new Tile(6, "G", images[7]);
-        initialTile[19] = new Tile(6, "G", images[7]);
-        initialTile[20] = new Tile(6, "G", images[7]);
-        initialTile[21] = new Tile(7, "Y", images[8]);
-        initialTile[22] = new Tile(7, "Y", images[8]);
-        initialTile[23] = new Tile(7, "P", images[9]);
-        initialTile[24] = new Tile(7, "C", images[10]);
-        initialTile[25] = new Tile(7, "C", images[10]);
-        initialTile[26] = new Tile(7, "C", images[10]);
-        initialTile[27] = new Tile(7, "C", images[10]);
+        initialTile[0] = new Tile(1, "G", tileImages[0]);
+        initialTile[1] = new Tile(2, "Y", tileImages[1]);
+        initialTile[2] = new Tile(2, "Y", tileImages[1]);
+        initialTile[3] = new Tile(3, "K", tileImages[2]);
+        initialTile[4] = new Tile(3, "K", tileImages[2]);
+        initialTile[5] = new Tile(3, "K", tileImages[2]);
+        initialTile[6] = new Tile(4, "B", tileImages[3]);
+        initialTile[7] = new Tile(4, "B", tileImages[3]);
+        initialTile[8] = new Tile(4, "B", tileImages[3]);
+        initialTile[9] = new Tile(4, "B", tileImages[3]);
+        initialTile[10] = new Tile(5, "R", tileImages[4]);
+        initialTile[11] = new Tile(5, "R", tileImages[4]);
+        initialTile[12] = new Tile(5, "R", tileImages[4]);
+        initialTile[13] = new Tile(5, "R", tileImages[4]);
+        initialTile[14] = new Tile(5, "K", tileImages[5]);
+        initialTile[15] = new Tile(6, "P", tileImages[6]);
+        initialTile[16] = new Tile(6, "P", tileImages[6]);
+        initialTile[17] = new Tile(6, "P", tileImages[6]);
+        initialTile[18] = new Tile(6, "G", tileImages[7]);
+        initialTile[19] = new Tile(6, "G", tileImages[7]);
+        initialTile[20] = new Tile(6, "G", tileImages[7]);
+        initialTile[21] = new Tile(7, "Y", tileImages[8]);
+        initialTile[22] = new Tile(7, "Y", tileImages[8]);
+        initialTile[23] = new Tile(7, "P", tileImages[9]);
+        initialTile[24] = new Tile(7, "C", tileImages[10]);
+        initialTile[25] = new Tile(7, "C", tileImages[10]);
+        initialTile[26] = new Tile(7, "C", tileImages[10]);
+        initialTile[27] = new Tile(7, "C", tileImages[10]);
 
         for (int i = 0; i < 28; i++)
         {
@@ -175,30 +185,62 @@ public class Code777Manager : MonoBehaviour
                 //Debug.Log("PRESS SPACE");
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
             }
-            if (spaceKeyLock && Input.GetKeyDown(KeyCode.Space))
-            {
-                //Debug.Log("PRESS SPACE");
-                //UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
-                spaceKeyLock = false;   //鎖死空白鍵
-                drawCard = Random.Range(0, questionCard.Count);
-                int cardNum = questionCard[drawCard];
-                questionCard.Remove(cardNum);
-                StartCoroutine(answerCard( cardNum, activePlayer ));
-            }
+            //if (spaceKeyLock && Input.GetKeyDown(KeyCode.Space))
+            //{
+            //    //Debug.Log("PRESS SPACE");
+            //    //UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
+            //    spaceKeyLock = false;   //鎖死空白鍵
+            //    drawCard = Random.Range(0, questionCard.Count);
+            //    int cardNum = questionCard[drawCard];
+            //    questionCard.Remove(cardNum);
+            //    StartCoroutine(AnswerCard( cardNum, activePlayer ));
+            //}
+        }
+
+        if (nextTurn)
+        {
+            //新回合的進入點
+
+            nextTurn = false;
+            spaceKeyLock = false;   //鎖死空白鍵
+            drawCard = Random.Range(0, questionCard.Count);
+            int cardNum = questionCard[drawCard];
+            questionCard.Remove(cardNum);
+            StartCoroutine(AnswerCard(cardNum, activePlayer));
+        }
+
+        if (callTurn)
+        {
+            //新回合的進入點前
+            answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+
+            callTurn = false;
+            spaceKeyLock = false;   //鎖死空白鍵
+            drawCard = Random.Range(0, questionCard.Count);
+            int cardNum = questionCard[drawCard];
+            questionCard.Remove(cardNum);
+            StartCoroutine(AnswerCard(cardNum, activePlayer));
         }
     }
 
-    IEnumerator answerCard(int cardId, List<Player> players)
+    IEnumerator AnswerCard(int cardId, List<Player> players)
     {
-        activePlayer[0].NolongerAnswerPlayer();
-        activePlayer[1].NolongerAnswerPlayer();
-        activePlayer[2].NolongerAnswerPlayer();
-        activePlayer[3].NolongerAnswerPlayer();
-        activePlayer[4].NolongerAnswerPlayer();
+        callButton.interactable = false;
+        passButton.interactable = false;
+        for (int i=0; i<players.Count; i++)
+        {
+            if(i== answerPlayer)
+            {
+                activePlayer[i].BecomeAnswerPlayer();
+            }
+            else
+            {
+                activePlayer[i].NolongerAnswerPlayer();
+            }
+        }
         questionText.text = "";
         answerText.text = "";
         speakerText.text = "這個問題由 <color=#FFC000>"+activePlayer[answerPlayer].name+"</color> 回答" ;
-        activePlayer[answerPlayer].BecomeAnswerPlayer();
         yield return new WaitForSeconds(1);
         //顯示問題卡
         switch (cardId)
@@ -280,6 +322,7 @@ public class Code777Manager : MonoBehaviour
         int compareKey2 = 0;
         int[] numberColorKey = new int[7];
 
+        //回答問題答案
         switch (cardId)
         {
             case 1:
@@ -640,8 +683,6 @@ public class Code777Manager : MonoBehaviour
         //玩家0的輔助模式
         activePlayer[0].TileLight(assistMode);
 
-        answerPlayer += (answerPlayer == 4) ? (-4) : 1;
-
         #region 重置問題卡
         if(questionCard.Count==0)
         {
@@ -654,6 +695,22 @@ public class Code777Manager : MonoBehaviour
         #endregion
 
         //恢復空白鍵功能
+        callButton.interactable = true;
+        passButton.interactable = true;
         spaceKeyLock = true;
+    }
+
+    void NumberCall()
+    {
+        //當玩家確定自己牌架上的數字時，會立即進行猜測。
+        //電腦一定會答對，但是電腦只會在剩餘一個組合時才會進行猜測，即使未確定的部分是不同顏色的相同數字
+        //根據規則，當有兩個以上的玩家要進行猜測時，從回答問題的玩家的右手邊的玩家開始以逆時鐘方向依序進行。
+
+        for(int i = answerPlayer + 4; i>answerPlayer; i--)
+        {
+            int playerId = i % 5;
+
+
+        }
     }
 }
