@@ -2205,7 +2205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.7529412}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -3526,7 +3526,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 445434430}
-  - component: {fileID: 445434429}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -3534,111 +3533,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &445434429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 445434428}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24f85726c4956884db87d5b1f335b3b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tileImages:
-  - {fileID: 21300000, guid: 636da9426dcdadb4a8b1344568e0de7f, type: 3}
-  - {fileID: 21300000, guid: 748092fb3978f6b418101a47952dc8d5, type: 3}
-  - {fileID: 21300000, guid: 9c9832f2f653fef45bd7d1b1e71364a9, type: 3}
-  - {fileID: 21300000, guid: b31c9e54c984fa94a875e2b1754a981e, type: 3}
-  - {fileID: 21300000, guid: c9ef97cb38ac7aa4fbb7ea3cb7bcbaf1, type: 3}
-  - {fileID: 21300000, guid: 7524f87f731a7a34a896e1ee053ede0c, type: 3}
-  - {fileID: 21300000, guid: 13aa330767bae70419e91c2eb0d6e49a, type: 3}
-  - {fileID: 21300000, guid: 81a076cdab9a2ed4db0f86c5aad71b08, type: 3}
-  - {fileID: 21300000, guid: f9f886d5de5703b40a32c83ebb6dd037, type: 3}
-  - {fileID: 21300000, guid: 840609e9c1076a641a940505c2f173f1, type: 3}
-  - {fileID: 21300000, guid: 5c572d7b80bd1c54d8b32d0237d5abba, type: 3}
-  - {fileID: 21300000, guid: f9a47378948766647bed8f4a8ff85808, type: 3}
-  presetPlayerName:
-  - AKino
-  - Menear
-  - IVAN
-  - Qulava
-  - Rareel
-  - Asamu
-  - Kurogin
-  - Cupio
-  presetPlayerIcon:
-  - {fileID: 21300000, guid: 3038d17b019d78b4792f5e313c495ef3, type: 3}
-  - {fileID: 21300000, guid: cbc1881cedddcbe439cc4113725bbfcb, type: 3}
-  - {fileID: 21300000, guid: 74cb077dae49cb54dabf0c52d52f8ce4, type: 3}
-  - {fileID: 21300000, guid: 7bb2caf9d8c9f8f42b142665304b38b8, type: 3}
-  - {fileID: 21300000, guid: 2ee5904799fe3a34282474ce3affe23c, type: 3}
-  - {fileID: 21300000, guid: b9c25d5b66463f64b92e16882962fba8, type: 3}
-  - {fileID: 21300000, guid: 1a9433799e3415f44a5d14cfb609861d, type: 3}
-  - {fileID: 21300000, guid: 391da214fad950849aaf8e72b1c472c1, type: 3}
-  playerIcon:
-  - {fileID: 1377410775}
-  - {fileID: 890471088}
-  - {fileID: 1099086233}
-  - {fileID: 69379772}
-  - {fileID: 985710526}
-  playerName:
-  - {fileID: 11984346}
-  - {fileID: 591660089}
-  - {fileID: 791200817}
-  - {fileID: 73492086}
-  - {fileID: 114306356}
-  possibleCount:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  tilePile: []
-  setTile: []
-  discardTile: []
-  questionCard: 
-  assistMode: 1
-  assistTile:
-  - {fileID: 1164134443}
-  - {fileID: 1310277829}
-  - {fileID: 1568278330}
-  - {fileID: 2085441931}
-  - {fileID: 748627501}
-  - {fileID: 2098341438}
-  - {fileID: 350733710}
-  - {fileID: 1417703669}
-  - {fileID: 225056461}
-  - {fileID: 329767495}
-  - {fileID: 307854054}
-  - {fileID: 293254028}
-  - {fileID: 820763741}
-  - {fileID: 500561693}
-  - {fileID: 1520359139}
-  - {fileID: 1931556886}
-  - {fileID: 1572586933}
-  - {fileID: 671516727}
-  - {fileID: 1235229361}
-  - {fileID: 1515675592}
-  - {fileID: 216465788}
-  - {fileID: 776057158}
-  - {fileID: 1883603464}
-  - {fileID: 502190659}
-  - {fileID: 844672679}
-  - {fileID: 2087078225}
-  - {fileID: 424699040}
-  - {fileID: 1498320513}
-  activePlayer: []
-  answerPlayer: 0
-  questionText: {fileID: 1451582937}
-  answerText: {fileID: 1105090097}
-  speakerText: {fileID: 242663005}
-  startButton: {fileID: 0}
-  callButton: {fileID: 0}
-  passButton: {fileID: 0}
-  spaceKeyLock: 0
-  answerTurn: 0000000000
 --- !u!4 &445434430
 Transform:
   m_ObjectHideFlags: 0
@@ -4507,7 +4401,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &602829798
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4566,7 +4460,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 602829800}
   m_OnClick:
     m_PersistentCalls:
@@ -10045,8 +9939,6 @@ MonoBehaviour:
   startButton: {fileID: 2058687952}
   callButton: {fileID: 602829799}
   passButton: {fileID: 1992836298}
-  spaceKeyLock: 1
-  answerTurn: 0000000000
 --- !u!1 &1661253670
 GameObject:
   m_ObjectHideFlags: 0
@@ -11613,7 +11505,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1992836297
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11672,7 +11564,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1992836299}
   m_OnClick:
     m_PersistentCalls:

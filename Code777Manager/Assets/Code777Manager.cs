@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum GameStatus { Idle, NextStep, NumberCall, PlayerCall, SecondJudge }
+
 public class Code777Manager : MonoBehaviour
 {
     public Sprite[] tileImages;
@@ -50,12 +52,37 @@ public class Code777Manager : MonoBehaviour
     public Button passButton;
 
     //操控控制項
-    public bool spaceKeyLock = true;
-    public bool[] answerTurn = new bool[5];
+    public static bool answerCall = false;
+    public static GameStatus status = GameStatus.Idle;
 
-    public static bool nextTurn = false;   //作為遊戲開始的開始叫用
-    public static bool callTurn = false;    //進入呼叫數字回合的開始叫用
-    public static bool playerCallTurn = false;  //進入玩家呼叫數字的回合開始叫用
+    //遊戲的狀態
+
+    //Idle：讓遊戲處於閒置狀態，不會任意在畫面演示任何動作
+
+    //NextStep：進入觸發方法後會切回Idle。
+    //按下按鈕「Start」「Continue」時會進入，
+    //會將「CALL」「PASS」按鈕隱藏
+    //使遊戲畫面演示一次問題卡回答。
+    //結束後顯示「CALL」「PASS」按鈕
+
+    //NumberCall：進入觸發方法後會切回Idle。
+    //按下「CALL」或「PASS」時會進入
+    //如果沒有玩家要呼叫數字，執行同NextStep狀態時的操作
+    //在有玩家要呼叫數字的情況，
+    //讓電腦玩家執行一次呼叫數字及刷新牌架的操作
+    //操作結束後，如果還有其他玩家要叫用數字，會切換回NumberCall狀態，否則進入SecondJudge狀態
+
+    //PlayerCall：輪到玩家呼叫的情況會進入此狀態。此狀態設定為玩家可以操作畫面的設定。
+    //當玩家呼叫完數字，並更新牌架。更新牌架前，先暫時切為Idle狀態
+    //如果還有其他玩家要叫用數字，會切換回NumberCall狀態，否則進入SecondJudge狀態
+
+    //SecondJudge：進入觸發方法後會切回Idle。
+    //在同時呼叫數字的一輪中，如果有玩家根據其他玩家的牌架刷新而有了新的情報，使之可以猜測數字時
+    //不能當下馬上宣告要呼叫數字(因為其他玩家的呼叫數字仍在連鎖中處理)
+    //而是在此狀態下做二次判定，進入新的一輪NumberCall的狀態。
+    //結束後顯示「CALL」「PASS」按鈕
+
+    //玩家是否要叫用數字，以布林值playerCall來判斷
     public static bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
 
     // Start is called before the first frame update
@@ -172,7 +199,6 @@ public class Code777Manager : MonoBehaviour
         answerPlayer = Random.Range(0, 5);
         #endregion
 
-        spaceKeyLock = true;
     }
 
     // Update is called once per frame
@@ -197,36 +223,60 @@ public class Code777Manager : MonoBehaviour
             //}
         }
 
-        if (nextTurn)
+        if (status == GameStatus.NextStep)
         {
             //新回合的進入點
-
-            nextTurn = false;
-            spaceKeyLock = false;   //鎖死空白鍵
+            status = GameStatus.Idle;
+            answerPlayer += (answerPlayer == 4) ? (-4) : 1;
             drawCard = Random.Range(0, questionCard.Count);
             int cardNum = questionCard[drawCard];
             questionCard.Remove(cardNum);
             StartCoroutine(AnswerCard(cardNum, activePlayer));
         }
 
-        if (callTurn)
+        if (status == GameStatus.NumberCall)
         {
             //新回合的進入點前
-            answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+            status = GameStatus.Idle;
 
-            callTurn = false;
-            spaceKeyLock = false;   //鎖死空白鍵
-            drawCard = Random.Range(0, questionCard.Count);
-            int cardNum = questionCard[drawCard];
-            questionCard.Remove(cardNum);
-            StartCoroutine(AnswerCard(cardNum, activePlayer));
+            if( answerCall || playerCall )
+            {
+                //有玩家要叫用數字時，執行叫用數字的部分
+                //answerCall的邏輯判定為，各個玩家內的欄位Solution只要有一個人為True，該欄位就為True
+                //但是對0號玩家不採用Solution的判定。而是根據選擇CALL或PASS決定是否要叫用
+
+                string logMessage = "";
+                logMessage += playerCall ? activePlayer[0].name + " " : "";
+                logMessage += activePlayer[1].solution ? activePlayer[1].name + " " : "";
+                logMessage += activePlayer[2].solution ? activePlayer[2].name + " " : "";
+                logMessage += activePlayer[3].solution ? activePlayer[3].name + " " : "";
+                logMessage += activePlayer[4].solution ? activePlayer[4].name + " " : "";
+                Debug.Log(logMessage+"已經可以叫用數字，但邏輯尚未完成，故先同一般操作處理");
+                //目前因為邏輯尚未完成，執行如同一般操作
+
+                answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+                drawCard = Random.Range(0, questionCard.Count);
+                int cardNum = questionCard[drawCard];
+                questionCard.Remove(cardNum);
+                StartCoroutine(AnswerCard(cardNum, activePlayer));
+            }
+            else
+            {
+                //沒有玩家要叫用數字，執行如同一般操作
+                answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+                drawCard = Random.Range(0, questionCard.Count);
+                int cardNum = questionCard[drawCard];
+                questionCard.Remove(cardNum);
+                StartCoroutine(AnswerCard(cardNum, activePlayer));
+            }
         }
     }
 
     IEnumerator AnswerCard(int cardId, List<Player> players)
     {
-        callButton.interactable = false;
-        passButton.interactable = false;
+        //隱藏CALL PASS按鈕
+        callButton.gameObject.SetActive(false);
+        passButton.gameObject.SetActive(false);
         for (int i=0; i<players.Count; i++)
         {
             if(i== answerPlayer)
@@ -683,8 +733,11 @@ public class Code777Manager : MonoBehaviour
         //玩家0的輔助模式
         activePlayer[0].TileLight(assistMode);
 
+        //呼叫數字判定
+        answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
+
         #region 重置問題卡
-        if(questionCard.Count==0)
+        if (questionCard.Count==0)
         {
             questionCard.Clear();
             for (int i = 1; i <= 23; i++)
@@ -694,10 +747,9 @@ public class Code777Manager : MonoBehaviour
         }
         #endregion
 
-        //恢復空白鍵功能
-        callButton.interactable = true;
-        passButton.interactable = true;
-        spaceKeyLock = true;
+        //CALL PASS按鈕顯示
+        callButton.gameObject.SetActive(true);
+        passButton.gameObject.SetActive(true);
     }
 
     void NumberCall()

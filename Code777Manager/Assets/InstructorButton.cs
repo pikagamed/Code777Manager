@@ -24,14 +24,14 @@ public class InstructorButton : MonoBehaviour
     {
         //玩家叫用
         Debug.Log("遊戲開始");
-        Code777Manager.nextTurn = true;
+        Code777Manager.status = GameStatus.NextStep;
     }
 
     public void InstructorHit()
     {
         //玩家叫用
         Debug.Log(numberCall?"按鈕CALL已經按下":"按鈕PASS已經按下");
-        Code777Manager.callTurn = true;
+        Code777Manager.status = GameStatus.NumberCall;
         Code777Manager.playerCall = numberCall ? true : false;
     }
 }

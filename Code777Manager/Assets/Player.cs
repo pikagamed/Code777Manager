@@ -20,6 +20,7 @@ public class Player
     private int _playerId = -1;
     private int _victory = 0;
     private Rack _rack;
+    private bool _solution;
 
     private GameObject[] _tileSprite = new GameObject[3];
     private GameObject[] _victoryLight = new GameObject[3];
@@ -37,6 +38,7 @@ public class Player
     public int playerId { get { return _playerId; } }
     public int victory { get { return _victory; } }
     public Rack rack { get { return _rack; } }
+    public bool solution { get { return _solution; } set { _solution = value; } }
     public TileInfer possibleNumber { get { return _possibleNumber; } }
 
     #endregion
@@ -339,6 +341,7 @@ public class Player
 
         _possibleSet = possibleSet;
         _possibleCount.text = _possibleSet.Count.ToString();
+        _solution = _possibleSet.Count <= 1 ? true : false;
     }
 
     /// <summary>
@@ -2238,6 +2241,7 @@ public class Player
 
         _possibleSet = possibleSet;
         _possibleCount.text = _possibleSet.Count.ToString();
+        _solution = _possibleSet.Count <= 1 ? true : false;
 
         //過濾自己可能拿取的最大數量
         TileInfer assignPossibleSet = new TileInfer(false); //一進場給予最大可能數值，一旦可能數量減少就會遞減，不會再增加
