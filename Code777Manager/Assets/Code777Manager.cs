@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum GameStatus { Idle, NextStep, NumberCall, PlayerCall, SecondJudge }
+public enum GameStatus { Idle, NextStep, NumberCall, PlayerCall, SecondJudge, GameSet }
 
 public class Code777Manager : MonoBehaviour
 {
@@ -27,12 +27,13 @@ public class Code777Manager : MonoBehaviour
     //public GameObject[] playerIcon;
     //public TextMesh[] playerName;
     public GameObject[] playerIcon;
+    public GameObject[] correctCall;
+    public GameObject[] wrongCall;
     public Text[] playerName;
     public Text[] possibleCount;
 
     public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
-    public List<Tile> setTile = new List<Tile>(3); //設置中的Tile暫存器
-    public List<Tile> discardTile = new List<Tile>(28); //使用過被棄置於場中央的Tile堆
+    public List<Tile> discardTile = new List<Tile>(3); //使用過被棄置於場中央的Tile堆
     public List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
 
     public bool assistMode = true;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
@@ -53,6 +54,9 @@ public class Code777Manager : MonoBehaviour
 
     //操控控制項
     public static bool answerCall = false;
+    //玩家是否要叫用數字，以布林值playerCall來判斷
+    public static bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
+
     public static GameStatus status = GameStatus.Idle;
 
     //遊戲的狀態
@@ -81,9 +85,6 @@ public class Code777Manager : MonoBehaviour
     //不能當下馬上宣告要呼叫數字(因為其他玩家的呼叫數字仍在連鎖中處理)
     //而是在此狀態下做二次判定，進入新的一輪NumberCall的狀態。
     //結束後顯示「CALL」「PASS」按鈕
-
-    //玩家是否要叫用數字，以布林值playerCall來判斷
-    public static bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
 
     // Start is called before the first frame update
     void Start()
@@ -137,13 +138,11 @@ public class Code777Manager : MonoBehaviour
 
             string activePlayerName = presetPlayerName[drawPlayer];
             Sprite activePlayerIcon = presetPlayerIcon[drawPlayer];
-            string[] tileSprite = new string[] { "Player" + i + "Tile0", "Player" + i + "Tile1", "Player" + i + "Tile2" };
-            string[] victoryLight = new string[] { "Player" + i + "Victory0", "Player" + i + "Victory1", "Player" + i + "Victory2" };
 
             playerIcon[i].GetComponent<Image>().sprite = activePlayerIcon;
             playerName[i].text = activePlayerName;
 
-            Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, tileSprite, victoryLight, possibleCount[i]);
+            Player newPlayer = new Player(activePlayerName, activePlayerIcon, i, 0, possibleCount[i]);
 
             activePlayer.Add(newPlayer);
 
@@ -245,6 +244,7 @@ public class Code777Manager : MonoBehaviour
                 //answerCall的邏輯判定為，各個玩家內的欄位Solution只要有一個人為True，該欄位就為True
                 //但是對0號玩家不採用Solution的判定。而是根據選擇CALL或PASS決定是否要叫用
 
+                /*
                 string logMessage = "";
                 logMessage += playerCall ? activePlayer[0].name + " " : "";
                 logMessage += activePlayer[1].solution ? activePlayer[1].name + " " : "";
@@ -252,13 +252,64 @@ public class Code777Manager : MonoBehaviour
                 logMessage += activePlayer[3].solution ? activePlayer[3].name + " " : "";
                 logMessage += activePlayer[4].solution ? activePlayer[4].name + " " : "";
                 Debug.Log(logMessage+"已經可以叫用數字，但邏輯尚未完成，故先同一般操作處理");
+                */
                 //目前因為邏輯尚未完成，執行如同一般操作
 
-                answerPlayer += (answerPlayer == 4) ? (-4) : 1;
-                drawCard = Random.Range(0, questionCard.Count);
-                int cardNum = questionCard[drawCard];
-                questionCard.Remove(cardNum);
-                StartCoroutine(AnswerCard(cardNum, activePlayer));
+                //answerPlayer += (answerPlayer == 4) ? (-4) : 1;
+                //drawCard = Random.Range(0, questionCard.Count);
+                //int cardNum = questionCard[drawCard];
+                //questionCard.Remove(cardNum);
+                //StartCoroutine(AnswerCard(cardNum, activePlayer));
+
+                //隱藏CALL PASS按鈕
+                callButton.gameObject.SetActive(false);
+                passButton.gameObject.SetActive(false);
+
+                activePlayer[answerPlayer].TileRecover();
+
+                //同時回答時，以AnswerPlayer自身，往右手邊的玩家順序進行
+                if ( (answerPlayer!=0 && activePlayer[answerPlayer].callOk) || (answerPlayer==0 && playerCall) )
+                {
+                    //回答玩家的回合
+                    if(answerPlayer == 0)  playerCall = false;
+                    StartCoroutine(NumberCall(answerPlayer));
+                }
+                else if( ( (answerPlayer + 4) % 5!=0 &&  activePlayer[(answerPlayer+4)%5].callOk) || ( (answerPlayer + 4) % 5==0 && playerCall ) )
+                {
+                    //回答玩家右手邊一位玩家的回合
+                    if ((answerPlayer + 4) % 5 == 0) playerCall = false;
+                    StartCoroutine(NumberCall((answerPlayer + 4) % 5));
+                }
+                else if( ( (answerPlayer + 3) % 5!=0 &&  activePlayer[(answerPlayer+3)%5].callOk) || ( (answerPlayer + 3) % 5==0 && playerCall ) )
+                {
+                    //回答玩家右手邊二位玩家的回合
+                    if ((answerPlayer + 3) % 5 == 0) playerCall = false;
+                    StartCoroutine(NumberCall((answerPlayer + 3) % 5));
+                }
+                else if (((answerPlayer + 2) % 5 != 0 && activePlayer[(answerPlayer + 2) % 5].callOk) || ((answerPlayer + 2) % 5 == 0 && playerCall))
+                {
+                    //回答玩家左手邊二位玩家的回合
+                    if ((answerPlayer + 2) % 5 == 0) playerCall = false;
+                    StartCoroutine(NumberCall((answerPlayer + 2) % 5));
+                }
+                else if (((answerPlayer + 1) % 5 != 0 && activePlayer[(answerPlayer + 1) % 5].callOk) || ((answerPlayer + 1) % 5== 0 && playerCall))
+                {
+                    //回答玩家左手邊一位玩家的回合
+                    if ((answerPlayer + 1) % 5 == 0) playerCall = false;
+                    StartCoroutine(NumberCall((answerPlayer + 1) % 5));
+                }
+                else
+                {
+                    //沒有玩家要再回答，進入二輪判定
+                    //剛才在同時回答中才確定數字組合的玩家的判定
+                    //呼叫數字判定
+                    answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
+                    activePlayer[1].callOk = activePlayer[1].solution;
+                    activePlayer[2].callOk = activePlayer[2].solution;
+                    activePlayer[3].callOk = activePlayer[3].solution;
+                    activePlayer[4].callOk = activePlayer[4].solution;
+                    status = GameStatus.SecondJudge;
+                }
             }
             else
             {
@@ -269,6 +320,14 @@ public class Code777Manager : MonoBehaviour
                 questionCard.Remove(cardNum);
                 StartCoroutine(AnswerCard(cardNum, activePlayer));
             }
+        }
+
+        if(status == GameStatus.SecondJudge)
+        {
+            status = GameStatus.Idle;
+            //CALL PASS按鈕顯示
+            callButton.gameObject.SetActive(true);
+            passButton.gameObject.SetActive(true);
         }
     }
 
@@ -735,6 +794,10 @@ public class Code777Manager : MonoBehaviour
 
         //呼叫數字判定
         answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
+        activePlayer[1].callOk = activePlayer[1].solution;
+        activePlayer[2].callOk = activePlayer[2].solution;
+        activePlayer[3].callOk = activePlayer[3].solution;
+        activePlayer[4].callOk = activePlayer[4].solution;
 
         #region 重置問題卡
         if (questionCard.Count==0)
@@ -752,17 +815,106 @@ public class Code777Manager : MonoBehaviour
         passButton.gameObject.SetActive(true);
     }
 
-    void NumberCall()
+    IEnumerator NumberCall(int callPlayer)
     {
         //當玩家確定自己牌架上的數字時，會立即進行猜測。
         //電腦一定會答對，但是電腦只會在剩餘一個組合時才會進行猜測，即使未確定的部分是不同顏色的相同數字
-        //根據規則，當有兩個以上的玩家要進行猜測時，從回答問題的玩家的右手邊的玩家開始以逆時鐘方向依序進行。
 
-        for(int i = answerPlayer + 4; i>answerPlayer; i--)
+        activePlayer[callPlayer].BecomeCallPlayer();
+
+        //畫面訊息刷新
+        questionText.text = "";
+        answerText.text = "";
+        speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 作答數字";
+        GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
+        GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().color = new Color(0, 0.75F, 1, 1);
+
+        //暫停1秒
+        yield return new WaitForSeconds(1);
+
+        //讓答對的效果跳出來
+        //GameObject.Find("Player" + callPlayer + "Correct").SetActive(true);
+        correctCall[callPlayer].SetActive(true);
+        questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字";
+        activePlayer[callPlayer].GetPoint();
+
+        //暫停2秒
+        yield return new WaitForSeconds(2);
+
+        //目前邏輯是一定會答對
+        correctCall[callPlayer].SetActive(false);
+        if (activePlayer[callPlayer].victory>=3)
         {
-            int playerId = i % 5;
+            //如果玩家獲得3分，遊戲就結束。
+            questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字\n" +
+                                            "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 獲得勝利";
+            answerText.text = "遊戲結束";
+
+            //開啟Player側的覆蓋Tile
+            GameObject.Find("Player0TileBack0").SetActive(false);
+            GameObject.Find("Player0TileBack1").SetActive(false);
+            GameObject.Find("Player0TileBack2").SetActive(false);
+
+            status = GameStatus.GameSet;
+        }
+        else
+        {
+            //答對跟答錯時，玩家獲得的情報不一樣
+            questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字\n" +
+                                "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 重設牌架";
+
+            //不論答對或答錯，玩家都會丟棄目前自己架上的3張牌，然後再從Pile抽3張起來
+            discardTile.Add( new Tile(activePlayer[callPlayer].rack.tiles[0].number,
+                                                      activePlayer[callPlayer].rack.tiles[0].color,
+                                                      activePlayer[callPlayer].rack.tiles[0].image) );
+            discardTile.Add(new Tile(activePlayer[callPlayer].rack.tiles[1].number,
+                                                      activePlayer[callPlayer].rack.tiles[1].color,
+                                                      activePlayer[callPlayer].rack.tiles[1].image));
+            discardTile.Add(new Tile(activePlayer[callPlayer].rack.tiles[2].number,
+                                                      activePlayer[callPlayer].rack.tiles[2].color,
+                                                      activePlayer[callPlayer].rack.tiles[2].image));
+
+            Tile tile0, tile1, tile2;
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile0 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile0
+            tilePile.Remove(tilePile[drawTile]);
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile1 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile1
+            tilePile.Remove(tilePile[drawTile]);
+
+            drawTile = Random.Range(0, tilePile.Count);
+            tile2 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile2
+            tilePile.Remove(tilePile[drawTile]);
+
+            activePlayer[callPlayer].NewRack(tile0, tile1, tile2);
 
 
+            //如果是答對的玩家，則可以確認自己剛才丟棄的TILE
+            //也就是過濾時可以加入discardTile的情報
+            activePlayer[callPlayer].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer+1)%5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 2) % 5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 3) % 5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 4) % 5].RackCheck(activePlayer, discardTile);
+
+            //玩家0的輔助模式
+            activePlayer[0].TileLight(assistMode);
+
+            //discardTile要洗回Tile堆中
+            tilePile.Add(discardTile[0]);
+            tilePile.Add(discardTile[1]);
+            tilePile.Add(discardTile[2]);
+            discardTile.Clear();
+
+            activePlayer[callPlayer].IconRecover();
+            GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle =
+                callPlayer == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
+            GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().color =
+                callPlayer == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
+            yield return new WaitForSeconds(2);
+            status = GameStatus.NumberCall;
         }
     }
 }

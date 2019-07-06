@@ -21,9 +21,11 @@ public class Player
     private int _victory = 0;
     private Rack _rack;
     private bool _solution;
+    private bool _callOk;
 
     private GameObject[] _tileSprite = new GameObject[3];
     private GameObject[] _victoryLight = new GameObject[3];
+    private GameObject _answerBar = new GameObject();
 
     private TileInfer _possibleNumber;
     private List<string> _possibleSet;
@@ -39,6 +41,7 @@ public class Player
     public int victory { get { return _victory; } }
     public Rack rack { get { return _rack; } }
     public bool solution { get { return _solution; } set { _solution = value; } }
+    public bool callOk { get { return _callOk; } set { _callOk = value; } }
     public TileInfer possibleNumber { get { return _possibleNumber; } }
 
     #endregion
@@ -54,18 +57,19 @@ public class Player
     /// <param name="victory">分數</param>
     /// <param name="tilePosition">牌架於場景上位置</param>
     /// <param name="victoryLight">勝利燈在場景上名稱</param>
-    public Player(string name, Sprite icon, int playerId, int victory, string[] tileSprite, string[] victoryLight, Text playerCount)
+    public Player(string name, Sprite icon, int playerId, int victory, Text playerCount)
     {
         _name = name;
         _icon = icon;
         _playerId = playerId;
-        _victory = victory;
-        _tileSprite[0] = GameObject.Find(tileSprite[0]);
-        _tileSprite[1] = GameObject.Find(tileSprite[1]);
-        _tileSprite[2] = GameObject.Find(tileSprite[2]);
-        _victoryLight[0] = GameObject.Find(victoryLight[0]);
-        _victoryLight[1] = GameObject.Find(victoryLight[1]);
-        _victoryLight[2] = GameObject.Find(victoryLight[2]);
+        _victory = 0;
+        _tileSprite[0] = GameObject.Find("Player" + playerId + "Tile0");
+        _tileSprite[1] = GameObject.Find("Player" + playerId + "Tile1");
+        _tileSprite[2] = GameObject.Find("Player" + playerId + "Tile2");
+        _victoryLight[0] = GameObject.Find("Player" + playerId + "Victory0");
+        _victoryLight[1] = GameObject.Find("Player" + playerId + "Victory1");
+        _victoryLight[2] = GameObject.Find("Player" + playerId + "Victory2");
+        _answerBar = GameObject.Find("Player" + playerId + "AnswerBar");
 
         _possibleCount = playerCount;
     }
@@ -88,7 +92,7 @@ public class Player
         _tileSprite[2].GetComponent<Image>().sprite = tile2.image;
 
 
-
+        _callOk = false;
         _possibleNumber = new TileInfer(true);
         PossibleSetReset();
     }
@@ -354,6 +358,34 @@ public class Player
         {
             if (assistMode)
             {
+                GameObject.Find("AssistTile1G").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile2Y_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile2Y_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile3K_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile3K_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile3K_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile4B_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile4B_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile4B_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile4B_4").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile5R_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile5R_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile5R_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile5R_4").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile5K").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6P_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6P_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6P_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6G_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6G_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile6G_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7Y_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7Y_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7P").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7C_1").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7C_2").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+                GameObject.Find("AssistTile7C_3").GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+
                 if (_possibleNumber.G1 < 1) GameObject.Find("AssistTile1G").GetComponent<Image>().color = new Vector4(0.25F,0.25F,0.25F,1F);
                 if (_possibleNumber.Y2 < 1) GameObject.Find("AssistTile2Y_1").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
                 if (_possibleNumber.Y2 < 2) GameObject.Find("AssistTile2Y_2").GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
@@ -396,7 +428,8 @@ public class Player
         //_tileSprite[1].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
         //_tileSprite[2].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
 
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor( new Color(1F, 0.5F, 0.5F, 1F) ,0.2f, false, true);
+        GameObject.Find("Player" + _playerId + "Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
+        GameObject.Find("Player" + _playerId + "Name").GetComponent<Text>().color = new Color(1, 0.75F, 0, 1);
         _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
         _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
         _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
@@ -411,7 +444,19 @@ public class Player
         //_tileSprite[0].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
         //_tileSprite[1].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
         //_tileSprite[2].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
-        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+
+        GameObject.Find("Player" + _playerId + "Name").GetComponent<Text>().fontStyle = FontStyle.Normal;
+        GameObject.Find("Player" + _playerId + "Name").GetComponent<Text>().color = new Color(1, 1, 1, 1);
+        _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+        _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+        _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
+    }
+
+    /// <summary>
+    /// 卡牌恢復明亮度
+    /// </summary>
+    public void TileRecover()
+    {
         _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
         _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
         _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
@@ -428,9 +473,14 @@ public class Player
         //_tileSprite[2].GetComponent<Image>().color = new Color(0.25F, 0.25F, 0.25F, 1F);
 
         GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor(new Color(1F, 0.5F, 0.5F, 1F), 0.2f, false, true);
-        _tileSprite[0].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
-        _tileSprite[1].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
-        _tileSprite[2].GetComponent<Image>().CrossFadeColor(new Color(0.25F, 0.25F, 0.25F, 1F), 0.2f, false, true);
+    }
+
+    /// <summary>
+    /// 回復頭像顏色
+    /// </summary>
+    public void IconRecover()
+    {
+        GameObject.Find("Player" + _playerId + "Icon").GetComponent<Image>().CrossFadeColor(new Color(1F, 1F, 1F, 1F), 0.2f, false, true);
     }
 
     /// <summary>
@@ -2293,6 +2343,12 @@ public class Player
         if (assignPossibleSet.P7 < _possibleNumber.P7) _possibleNumber.P7 = assignPossibleSet.P7;
         if (assignPossibleSet.C7 < _possibleNumber.C7) _possibleNumber.C7 = assignPossibleSet.C7;
 
+    }
+
+    public void GetPoint()
+    {
+        _victoryLight[_victory>2?2:_victory].GetComponent<Image>().color = new Color(1F, 1F, 1F, 1F);
+        _victory++;
     }
 
     #endregion
