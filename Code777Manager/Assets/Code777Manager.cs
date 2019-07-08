@@ -105,6 +105,16 @@ public class Code777Manager : MonoBehaviour
         answerText.text = "";
         speakerText.text = "";
 
+        #region DEBUG顯示所有玩家可能性
+
+        //possibleCount[0].gameObject.SetActive(true);
+        //possibleCount[1].gameObject.SetActive(true);
+        //possibleCount[2].gameObject.SetActive(true);
+        //possibleCount[3].gameObject.SetActive(true);
+        //possibleCount[4].gameObject.SetActive(true);
+
+        #endregion
+
         #region  初始化TILE堆
         initialTile[0] = new Tile(1, "G", tileImages[0]);
         initialTile[1] = new Tile(2, "Y", tileImages[1]);
@@ -209,7 +219,6 @@ public class Code777Manager : MonoBehaviour
         #region 隨機決定起始玩家
         answerPlayer = Random.Range(0, 5);
         #endregion
-
 
         #region 初始化玩家回答介面按鈕
         numberUp[0].onClick.AddListener(delegate { PlayerCallKey(0, true); });
@@ -367,6 +376,9 @@ public class Code777Manager : MonoBehaviour
 
     IEnumerator AnswerCard(int cardId, List<Player> players)
     {
+        //Debug用測試訊息
+        string debugMessage = "";
+
         //隱藏CALL PASS按鈕
         callButton.gameObject.SetActive(false);
         passButton.gameObject.SetActive(false);
@@ -465,7 +477,7 @@ public class Code777Manager : MonoBehaviour
         int compareKey2 = 0;
         int[] numberColorKey = new int[7];
 
-        //回答問題答案
+        #region  回答問題答案
         switch (cardId)
         {
             case 1:
@@ -817,6 +829,30 @@ public class Code777Manager : MonoBehaviour
                                              ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
                 break;
         }
+        debugMessage = debugMessage + activePlayer[answerPlayer].name + "回答： " + questionText.text + "　" + answerText.text +"\n";
+        debugMessage = debugMessage + activePlayer[answerPlayer].name + "所見： ";
+        for(int i= answerPlayer+1; i< answerPlayer+activePlayer.Count;i++)
+        {
+            debugMessage += activePlayer[i% activePlayer.Count].name + "[ <b>";
+            for (int j = 0; j < 3; j++)
+            {
+                switch (activePlayer[i % activePlayer.Count].rack.tiles[j].color)
+                {
+                    case "G": debugMessage += "<color=#009960>"; break;
+                    case "Y": debugMessage += "<color=#F2CC00>"; break;
+                    case "K": debugMessage += "<color=#404040>"; break;
+                    case "B": debugMessage += "<color=#A64C26>"; break;
+                    case "R": debugMessage += "<color=#D90000>"; break;
+                    case "P": debugMessage += "<color=#D91ACC>"; break;
+                    case "C": debugMessage += "<color=#0059FF>"; break;
+                    default: break;
+                }
+                debugMessage += activePlayer[i % activePlayer.Count].rack.tiles[j].number + "</color> ";
+            }
+            debugMessage += "</b>]　";
+        }
+        Debug.Log(debugMessage);
+        #endregion
 
         activePlayer[(answerPlayer + 4) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
         activePlayer[(answerPlayer + 3) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
@@ -851,6 +887,29 @@ public class Code777Manager : MonoBehaviour
 
     IEnumerator NumberCall(int callPlayer)
     {
+        //DEBUG用訊息
+        string debugMessage;
+
+        #region 紀錄玩家猜測前牌架
+        debugMessage = "[ <b>";
+        for (int j = 0; j < 3; j++)
+        {
+            switch (activePlayer[callPlayer].rack.tiles[j].color)
+            {
+                case "G": debugMessage += "<color=#009960>"; break;
+                case "Y": debugMessage += "<color=#F2CC00>"; break;
+                case "K": debugMessage += "<color=#404040>"; break;
+                case "B": debugMessage += "<color=#A64C26>"; break;
+                case "R": debugMessage += "<color=#D90000>"; break;
+                case "P": debugMessage += "<color=#D91ACC>"; break;
+                case "C": debugMessage += "<color=#0059FF>"; break;
+                default: break;
+            }
+            debugMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
+        }
+        debugMessage += "</b>]";
+        #endregion
+
         //當玩家確定自己牌架上的數字時，會立即進行猜測。
         //電腦一定會答對，但是電腦只會在剩餘一個組合時才會進行猜測，即使未確定的部分是不同顏色的相同數字
 
@@ -866,6 +925,7 @@ public class Code777Manager : MonoBehaviour
         //暫停1秒
         yield return new WaitForSeconds(1);
 
+        debugMessage = activePlayer[callPlayer].name + "答對了牌架" + debugMessage;
         //讓答對的效果跳出來
         //GameObject.Find("Player" + callPlayer + "Correct").SetActive(true);
         correctCall[callPlayer].SetActive(true);
@@ -879,6 +939,8 @@ public class Code777Manager : MonoBehaviour
         correctCall[callPlayer].SetActive(false);
         if (activePlayer[callPlayer].victory>=3)
         {
+            Debug.Log(debugMessage);
+
             //如果玩家獲得3分，遊戲就結束。
             questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字\n" +
                                             "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 獲得勝利";
@@ -929,6 +991,13 @@ public class Code777Manager : MonoBehaviour
             //如果是答對的玩家，則可以確認自己剛才丟棄的TILE
             //也就是過濾時可以加入discardTile的情報
             activePlayer[callPlayer].RackCheck(activePlayer, discardTile);
+
+            //discardTile要洗回Tile堆中
+            tilePile.Add(discardTile[0]);
+            tilePile.Add(discardTile[1]);
+            tilePile.Add(discardTile[2]);
+            discardTile.Clear();
+
             activePlayer[(callPlayer+1)%5].RackCheck(activePlayer, discardTile);
             activePlayer[(callPlayer + 2) % 5].RackCheck(activePlayer, discardTile);
             activePlayer[(callPlayer + 3) % 5].RackCheck(activePlayer, discardTile);
@@ -937,12 +1006,6 @@ public class Code777Manager : MonoBehaviour
             //玩家0的輔助模式
             activePlayer[0].TileLight(assistMode);
 
-            //discardTile要洗回Tile堆中
-            tilePile.Add(discardTile[0]);
-            tilePile.Add(discardTile[1]);
-            tilePile.Add(discardTile[2]);
-            discardTile.Clear();
-
             activePlayer[callPlayer].IconRecover();
             GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle =
                 callPlayer == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
@@ -950,6 +1013,29 @@ public class Code777Manager : MonoBehaviour
                 callPlayer == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
             yield return new WaitForSeconds(2);
             status = GameStatus.NumberCall;
+
+            #region 紀錄玩家猜測後牌架
+            debugMessage = debugMessage + "\n牌架更換為";
+            debugMessage = debugMessage + "[ <b>";
+            for (int j = 0; j < 3; j++)
+            {
+                switch (activePlayer[callPlayer].rack.tiles[j].color)
+                {
+                    case "G": debugMessage += "<color=#009960>"; break;
+                    case "Y": debugMessage += "<color=#F2CC00>"; break;
+                    case "K": debugMessage += "<color=#404040>"; break;
+                    case "B": debugMessage += "<color=#A64C26>"; break;
+                    case "R": debugMessage += "<color=#D90000>"; break;
+                    case "P": debugMessage += "<color=#D91ACC>"; break;
+                    case "C": debugMessage += "<color=#0059FF>"; break;
+                    default: break;
+                }
+                debugMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
+            }
+            debugMessage += "</b>]";
+            #endregion
+
+            Debug.Log(debugMessage);
         }
     }
 
@@ -981,6 +1067,30 @@ public class Code777Manager : MonoBehaviour
 
     IEnumerator PlayerCallSubmit()
     {
+        //Debug用訊息
+        string debugMessage = "";
+
+        #region 紀錄玩家猜測前牌架
+        debugMessage = "[ <b>";
+        for (int j = 0; j < 3; j++)
+        {
+            switch (activePlayer[0].rack.tiles[j].color)
+            {
+                case "G": debugMessage += "<color=#009960>"; break;
+                case "Y": debugMessage += "<color=#F2CC00>"; break;
+                case "K": debugMessage += "<color=#404040>"; break;
+                case "B": debugMessage += "<color=#A64C26>"; break;
+                case "R": debugMessage += "<color=#D90000>"; break;
+                case "P": debugMessage += "<color=#D91ACC>"; break;
+                case "C": debugMessage += "<color=#0059FF>"; break;
+                default: break;
+            }
+            debugMessage += activePlayer[0].rack.tiles[j].number + " </color>";
+        }
+        debugMessage += "</b>]";
+        #endregion
+
+
         List<int> sortAnswer = new List<int>(3);
         sortAnswer.Add(numberCallTile[0]);
         sortAnswer.Add(numberCallTile[1]);
@@ -991,7 +1101,7 @@ public class Code777Manager : MonoBehaviour
         {
             if( advancedMode )
             {
-                switch(numberCallTile[i])
+                switch(sortAnswer[i])
                 {
                     case 0: defineAnswer += "1G";  break;
                     case 1: defineAnswer += "2Y"; break;
@@ -1008,13 +1118,15 @@ public class Code777Manager : MonoBehaviour
             }
             else
             {
-                defineAnswer += (numberCallTile[i] + 1).ToString();
+                defineAnswer += (sortAnswer[i] + 1).ToString();
             }
         }
 
         //正誤判定
         if( (advancedMode && defineAnswer == activePlayer[0].rack.numberColorMatch) || (!advancedMode && defineAnswer == activePlayer[0].rack.numberMatch))
         {
+            debugMessage = activePlayer[0].name + "答對了牌架" + debugMessage;
+
             //正解
             correctCall[0].SetActive(true);
             questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字";
@@ -1031,6 +1143,8 @@ public class Code777Manager : MonoBehaviour
             correctCall[0].SetActive(false);
             if (activePlayer[0].victory >= 3)
             {
+                Debug.Log(debugMessage);
+
                 //如果玩家獲得3分，遊戲就結束。
                 questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字\n" +
                                                 "<color=#00C0FF>" + activePlayer[0].name + "</color> 獲得勝利";
@@ -1081,6 +1195,13 @@ public class Code777Manager : MonoBehaviour
                 //如果是答對的玩家，則可以確認自己剛才丟棄的TILE
                 //也就是過濾時可以加入discardTile的情報
                 activePlayer[0].RackCheck(activePlayer, discardTile);
+
+                //discardTile要洗回Tile堆中
+                tilePile.Add(discardTile[0]);
+                tilePile.Add(discardTile[1]);
+                tilePile.Add(discardTile[2]);
+                discardTile.Clear();
+
                 activePlayer[1].RackCheck(activePlayer, discardTile);
                 activePlayer[2].RackCheck(activePlayer, discardTile);
                 activePlayer[3].RackCheck(activePlayer, discardTile);
@@ -1089,12 +1210,6 @@ public class Code777Manager : MonoBehaviour
                 //玩家0的輔助模式
                 activePlayer[0].TileLight(assistMode);
 
-                //discardTile要洗回Tile堆中
-                tilePile.Add(discardTile[0]);
-                tilePile.Add(discardTile[1]);
-                tilePile.Add(discardTile[2]);
-                discardTile.Clear();
-
                 activePlayer[0].IconRecover();
                 GameObject.Find("Player0Name").GetComponent<Text>().fontStyle =
                     0== answerPlayer ? FontStyle.Bold : FontStyle.Normal;
@@ -1102,10 +1217,35 @@ public class Code777Manager : MonoBehaviour
                     0 == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
                 yield return new WaitForSeconds(2);
                 status = GameStatus.NumberCall;
+
+                #region 紀錄玩家猜測後牌架
+                debugMessage = debugMessage + "\n牌架更換為";
+                debugMessage = debugMessage + "[ <b>";
+                for (int j = 0; j < 3; j++)
+                {
+                    switch (activePlayer[0].rack.tiles[j].color)
+                    {
+                        case "G": debugMessage += "<color=#009960>"; break;
+                        case "Y": debugMessage += "<color=#F2CC00>"; break;
+                        case "K": debugMessage += "<color=#404040>"; break;
+                        case "B": debugMessage += "<color=#A64C26>"; break;
+                        case "R": debugMessage += "<color=#D90000>"; break;
+                        case "P": debugMessage += "<color=#D91ACC>"; break;
+                        case "C": debugMessage += "<color=#0059FF>"; break;
+                        default: break;
+                    }
+                    debugMessage += activePlayer[0].rack.tiles[j].number + " </color>";
+                }
+                debugMessage += "</b>]";
+                #endregion
+
+                Debug.Log(debugMessage);
             }
         }
         else
         {
+            debugMessage = activePlayer[0].name + "答錯了牌架" + debugMessage;
+
             //答錯
             wrongCall[0].SetActive(true);
             questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答錯了數字";
@@ -1146,12 +1286,6 @@ public class Code777Manager : MonoBehaviour
 
             activePlayer[0].NewRack(tile0, tile1, tile2);
 
-            //如果是答對的玩家，則可以確認自己剛才丟棄的TILE
-            //也就是過濾時可以加入discardTile的情報
-            activePlayer[1].RackCheck(activePlayer, discardTile);
-            activePlayer[2].RackCheck(activePlayer, discardTile);
-            activePlayer[3].RackCheck(activePlayer, discardTile);
-            activePlayer[4].RackCheck(activePlayer, discardTile);
 
             //discardTile要洗回Tile堆中
             tilePile.Add(discardTile[0]);
@@ -1161,6 +1295,12 @@ public class Code777Manager : MonoBehaviour
 
             //答錯的玩家 要在不知道自己原本牌架的情況下對下一個牌架做篩選
             activePlayer[0].RackCheck(activePlayer, discardTile);
+
+            activePlayer[1].RackCheck(activePlayer, discardTile);
+            activePlayer[2].RackCheck(activePlayer, discardTile);
+            activePlayer[3].RackCheck(activePlayer, discardTile);
+            activePlayer[4].RackCheck(activePlayer, discardTile);
+
             //玩家0的輔助模式
             activePlayer[0].TileLight(assistMode);
 
@@ -1171,6 +1311,29 @@ public class Code777Manager : MonoBehaviour
                 0 == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
             yield return new WaitForSeconds(2);
             status = GameStatus.NumberCall;
+
+            #region 紀錄玩家猜測後牌架
+            debugMessage = debugMessage + "\n牌架更換為";
+            debugMessage = debugMessage + "[ <b>";
+            for (int j = 0; j < 3; j++)
+            {
+                switch (activePlayer[0].rack.tiles[j].color)
+                {
+                    case "G": debugMessage += "<color=#009960>"; break;
+                    case "Y": debugMessage += "<color=#F2CC00>"; break;
+                    case "K": debugMessage += "<color=#808080>"; break;
+                    case "B": debugMessage += "<color=#A64C26>"; break;
+                    case "R": debugMessage += "<color=#D90000>"; break;
+                    case "P": debugMessage += "<color=#D91ACC>"; break;
+                    case "C": debugMessage += "<color=#0059FF>"; break;
+                    default: break;
+                }
+                debugMessage += activePlayer[0].rack.tiles[j].number + " </color>";
+            }
+            debugMessage += "</b>]";
+            #endregion
+
+            Debug.Log(debugMessage);
         }
 
     }

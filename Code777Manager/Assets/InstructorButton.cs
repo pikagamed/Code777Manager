@@ -30,7 +30,7 @@ public class InstructorButton : MonoBehaviour
     public void InstructorHit()
     {
         //玩家叫用
-        Debug.Log(numberCall?"按鈕CALL已經按下":"按鈕PASS已經按下");
+        //Debug.Log(numberCall?"按鈕CALL已經按下":"按鈕PASS已經按下");
         Code777Manager.status = GameStatus.NumberCall;
         Code777Manager.answerCall = numberCall ? true : Code777Manager.answerCall;
         Code777Manager.playerCall = numberCall ? true : false;

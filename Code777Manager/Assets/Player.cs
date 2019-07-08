@@ -102,7 +102,7 @@ public class Player
     /// </summary>
     private void PossibleSetReset()
     {
-        int[] possibleTiles = new int[] { 1, 2, 3, 3, 3, 1, 3, 3, 2, 1, 3 };
+        int[] possibleTiles = new int[] { 1, 2, 3, 4, 4, 1, 3, 3, 2, 1, 4 };
         List<string> possibleSet = new List<string>();
         int[] gotTiles = new int[11];//已取Tile數，用以判斷是否已經取到上限使用
         int[] tile = new int[3];   //可能的組合Tile數
@@ -343,6 +343,8 @@ public class Player
             gotTiles[tile0]--;  //TILE用完記得歸還
         }
 
+        if (possibleSet.Count == 0)
+            Debug.LogError("<color=#FF0000><b>發生嚴重錯誤，" + _name + "牌架的可能性被篩選至0</b></color>");
         _possibleSet = possibleSet;
         _possibleCount.text = _possibleSet.Count.ToString();
         _solution = _possibleSet.Count <= 1 ? true : false;
@@ -2289,6 +2291,8 @@ public class Player
 
         }
 
+        if (possibleSet.Count == 0)
+            Debug.LogError("<color=#FF0000><b>發生嚴重錯誤，" + _name + "牌架的可能性被篩選至0</b></color>");
         _possibleSet = possibleSet;
         _possibleCount.text = _possibleSet.Count.ToString();
         _solution = _possibleSet.Count <= 1 ? true : false;

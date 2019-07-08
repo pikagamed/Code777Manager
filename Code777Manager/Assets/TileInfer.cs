@@ -39,14 +39,14 @@ public class TileInfer
         _green1 = possible ? 1 : 0 ;
         _yellow2 = possible ? 2 : 0;
         _black3 = possible ? 3 : 0;
-        _brown4 = possible ? 3 : 0;
-        _red5 = possible ? 3 : 0;
+        _brown4 = possible ? 4 : 0;
+        _red5 = possible ? 4 : 0;
         _black5 = possible ? 1 : 0;
         _pink6 = possible ? 3 : 0;
         _green6 = possible ? 3 : 0;
         _yellow7 = possible ? 2 : 0;
         _pink7 = possible ? 1 : 0;
-        _cyan7 = possible ? 3 : 0;
+        _cyan7 = possible ? 4 : 0;
     }
     #endregion
 }
