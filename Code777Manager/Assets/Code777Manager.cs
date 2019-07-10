@@ -23,6 +23,7 @@ public class Code777Manager : MonoBehaviour
     public static Tile[] initialTile = new Tile[28];
     public Sprite[] tileSprites;
     public Sprite[] tileSpritesColor;
+    public Sprite tileSpriteBack;
     #endregion
 
     //public GameObject[] playerIcon;
@@ -37,9 +38,10 @@ public class Code777Manager : MonoBehaviour
     public List<Tile> discardTile = new List<Tile>(3); //使用過被棄置於場中央的Tile堆
     public List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
 
-    public bool assistMode = true;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
-    public bool advancedMode = false;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
-    //public GameObject[] assistTile;
+    public bool assistMode;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
+    public bool advancedMode;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
+
+    public GameObject assistTileSet;
     public Image[] assistTile;
     public Image[] playerTileBack;
 
@@ -50,6 +52,14 @@ public class Code777Manager : MonoBehaviour
     public Text questionText;
     public Text answerText;
     public Text speakerText;
+
+    #region 遊戲中的LOG
+    public GameObject assistLog;
+    public List<string> logMessage = new List<string>();
+    public Text[] logTextId;
+    public Text[] logTextContent;
+    public Slider logSlider;
+    #endregion
 
     public Button startButton;
     public Button callButton;
@@ -101,9 +111,15 @@ public class Code777Manager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        assistMode = false;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
+        advancedMode = false;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
+
         questionText.text = "";
         answerText.text = "";
         speakerText.text = "";
+
+        assistTileSet.SetActive(assistMode);
+        assistLog.SetActive(!assistMode);
 
         #region DEBUG顯示所有玩家可能性
 
@@ -212,7 +228,79 @@ public class Code777Manager : MonoBehaviour
         activePlayer[4].RackCheck(activePlayer, discardTile);
 
         //玩家0的輔助模式
-        activePlayer[0].TileLight(assistMode);
+        TileLight();
+
+        #endregion
+
+        #region 輸入各其他玩家的起始牌架於LOG內
+
+        for (int i = 0; i < 5; i++)
+        {
+            logTextId[i].text = "" ;
+            logTextContent[i].text = "";
+        }
+
+        //起始LOG只有五個
+        //0.遊戲開始
+        //1.電腦1(玩家下家)的起始牌架
+        //2.電腦2(玩家下下家)的起始牌架
+        //3.電腦3(玩家上上家)的起始牌架
+        //4.電腦4(玩家上家)的起始牌架
+
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                logMessage.Add("<color=#FF8080>遊戲開始</color>");
+                break;
+            case Language.Japanese:
+                logMessage.Add("<color=#FF8080>ゲームが始まります</color>");
+                break;
+            case Language.English:
+                logMessage.Add("<color=#FF8080>Game Start</color>");
+                break;
+            default:
+                break;
+        }
+
+        for (int i = 1; i < activePlayer.Count; i++)
+        {
+            string tileInformation = "【<b> ";
+
+            for (int j = 0; j < 3; j++)
+            {
+                switch (activePlayer[i].rack.tiles[j].color)
+                {
+                    case "G": tileInformation += "<color=#009960>"; break;
+                    case "Y": tileInformation += "<color=#F2CC00>"; break;
+                    case "K": tileInformation += "<color=#808080>"; break;
+                    case "B": tileInformation += "<color=#A64C26>"; break;
+                    case "R": tileInformation += "<color=#D90000>"; break;
+                    case "P": tileInformation += "<color=#D91ACC>"; break;
+                    case "C": tileInformation += "<color=#0059FF>"; break;
+                    default: break;
+                }
+                tileInformation += activePlayer[i].rack.tiles[j].number + " </color>";
+            }
+
+            tileInformation += "</b>】";
+
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    logMessage.Add("<color=#00C0FF><B>" + activePlayer[i].name + "</B></color>的起始牌架為 " + tileInformation);
+                    break;
+                case Language.Japanese:
+                    logMessage.Add("<color=#00C0FF><B>" + activePlayer[i].name + "</B></color>の最初のラックは " + tileInformation + "である");
+                    break;
+                case Language.English:
+                    logMessage.Add("<color=#00C0FF><B>" + activePlayer[i].name + "</B></color>'s initial rack is " + tileInformation + ".");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        JumpToLatestLog();
 
         #endregion
 
@@ -350,6 +438,109 @@ public class Code777Manager : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// 對Player0適用的輔助模式
+    /// </summary>
+    public void TileLight()
+    {
+        assistTile[0].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[1].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[2].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[3].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[4].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[5].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[6].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[7].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[8].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[9].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[10].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[11].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[12].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[13].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[14].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[15].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[16].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[17].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[18].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[19].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[20].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[21].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[22].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[23].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[24].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[25].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[26].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+        assistTile[27].GetComponent<Image>().color = new Vector4(0.75F, 0.75F, 0.75F, 1F);
+
+        if (activePlayer[0].possibleNumber.G1 < 1) assistTile[0].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.Y2 < 1) assistTile[1].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.Y2 < 2) assistTile[2].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.K3 < 1) assistTile[3].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.K3 < 2) assistTile[4].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.K3 < 3) assistTile[5].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.B4 < 1) assistTile[6].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.B4 < 2) assistTile[7].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.B4 < 3) assistTile[8].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.B4 < 4) assistTile[9].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.R5 < 1) assistTile[10].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.R5 < 2) assistTile[11].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.R5 < 3) assistTile[12].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.R5 < 4) assistTile[13].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.K5 < 1) assistTile[14].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.P6 < 1) assistTile[15].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.P6 < 2) assistTile[16].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.P6 < 3) assistTile[17].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.G6 < 1) assistTile[18].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.G6 < 2) assistTile[19].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.G6 < 3) assistTile[20].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.Y7 < 1) assistTile[21].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.Y7 < 2) assistTile[22].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.P7 < 1) assistTile[23].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.C7 < 1) assistTile[24].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.C7 < 2) assistTile[25].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.C7 < 3) assistTile[26].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+        if (activePlayer[0].possibleNumber.C7 < 4) assistTile[27].GetComponent<Image>().color = new Vector4(0.25F, 0.25F, 0.25F, 1F);
+    }
+
+    void JumpToLatestLog()
+    {
+        logSlider.value = 1;
+        for (int i = 0; i < 5; i++)
+        {
+            logTextId[i].text = (i + 1).ToString();
+            logTextContent[i].text = logMessage[logMessage.Count - 5 + i];
+        }
+    }
+
+    void LogSliding()
+    {
+        //Silde的邏輯：
+        //假設LogList小於等於5個字串，Slide不起作用
+        //假設LogList等於6個字串，會把List分割為 [0],[1],[2],[3],[4] 和 [1],[2],[3],[4],[5] 兩個區間
+        //假設LogList等於7個字串，會把List分割為 [0],[1],[2],[3],[4] 和 [1],[2],[3],[4],[5] 和 [2],[3],[4],[5],[6] 三個區間
+
+        //因此邏輯為，將Value分割為 logMessage.Count - 4 個區間
+        decimal slideCell = 1M / (logMessage.Count - 4);  //如果是6個LOG，區間是2個，每個0.5；7個LOG，區間是3個，每個0.333；8個LOG；區間是4個，每個0.25。
+        int period;
+        if(logSlider.value==1)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                logTextId[i].text = (i + 1).ToString();
+                logTextContent[i].text = logMessage[logMessage.Count - 5 + i];
+            }
+        }
+        else
+        {
+            period = (int) System.Math.Floor(((decimal) logSlider.value) / slideCell);
+            for (int i = period; i < period+5; i++)
+            {
+                logTextId[i].text = (i + 1).ToString();
+                logTextContent[i].text = logMessage[i];
+            }
+        }
+    }
+
     void PlayerCallKey(int index, bool upKey)
     {
         if (upKey)
@@ -395,81 +586,348 @@ public class Code777Manager : MonoBehaviour
         }
         questionText.text = "";
         answerText.text = "";
-        speakerText.text = "這個問題由 <color=#FFC000>"+activePlayer[answerPlayer].name+"</color> 回答" ;
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                speakerText.text = "這個問題由 <color=#FFC000>" + activePlayer[answerPlayer].name + "</color> 回答";
+                break;
+            case Language.Japanese:
+                speakerText.text = "<color=#FFC000>" + activePlayer[answerPlayer].name + "</color> は質問を答える";
+                break;
+            case Language.English:
+                speakerText.text = "<color=#FFC000>" + activePlayer[answerPlayer].name + "</color> answers the Question";
+                break;
+        }
         yield return new WaitForSeconds(1);
-        //顯示問題卡
+
+        #region 顯示問題卡
         switch (cardId)
         {
             case 1:
-                questionText.text = cardId+". 有多少個牌架上的牌，三個數字總和是<b>18以上</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>18以上</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". 三つの数字の和が<b>18以上</b>のラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks is the sum of the numbers <b>18 or more</b>?";
+                        break;
+                }
                 break;
             case 2:
-                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". 三つの数字の和が<b>12以下</b>のラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks is the sum of the numbers <b>12 or less</b>?";
+                        break;
+                }
                 break;
             case 3:
-                questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b>色が違う同じ数字</b>があるラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks is there <b>a same number in different colors</b>? ";
+                        break;
+                }
                 break;
             case 4:
-                questionText.text = cardId + ". 有多少個牌架上的牌，出現三個<b>不同顏色</b>的數字？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>三個不同顏色</b>的數字？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b>三つの数字の色が違う</b>ラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks are there <b>3 different colors</b>?";
+                        break;
+                }
                 break;
             case 5:
-                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". 三つの数字が<b>全員奇数</b>か<b>全員偶数</b>であるラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks are the numbers either <b>all even</b> or <b>all uneven</b>?";
+                        break;
+                }
                 break;
             case 6:
-                questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b>色も数字も同じなタイル</b>があるラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks are there <b>at least 2 identical cards</b>?";
+                        break;
+                }
                 break;
             case 7:
-                questionText.text = cardId + ". 有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". 三つの数字が<b>連続番号</b>であるラックがいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". On how many racks do you see <b>3 consecutive numbers</b>?";
+                        break;
+                }
                 break;
             case 8:
-                questionText.text = cardId + ". 你看到<b>多少種顏色</b>的數字牌？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 你看到<b>多少種顏色</b>的數字牌？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". 色が<b>いくつ</b>見えるでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". <b>How many colors</b> do you see?";
+                        break;
+                }
                 break;
             case 9:
-                questionText.text = cardId + ". 有幾種<b>顏色</b>出現了<b>三次以上</b>？" ;
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有幾種<b>顏色</b>出現了<b>三次以上</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b>三枚以上</b>である<b>色</b>がいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". How many <b>colors</b> appear <b>at least 3 times</b>?";
+                        break;
+                }
                 break;
             case 10:
-                questionText.text = cardId + ". 有幾種數字<b>完全沒有出現</b>？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". 有幾種數字<b>完全沒有出現</b>？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b>全然出ない</b>数字がいくつでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". How many numbers are <b>missing</b>?";
+                        break;
+                }
                 break;
             case 11:
-                questionText.text = cardId + ". <b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#009960>緑1</color>、<color=#808080>黒5</color>、<color=#D91ACC>桃7</color></b>が合計いくつ見えるでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". How many of the following do you see in all: <b><color=#009960>Green ones</color>, <color=#808080>Black fives</color>, <color=#D91ACC>Pink sevens</color></b>?";
+                        break;
+                }
                 break;
             case 12:
-                questionText.text = cardId + ". <b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#808080>黒3</color>か<color=#D91ACC>桃6</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#808080>Black threes</color> or <color=#D91ACC>Pink sixes</color></b>?";
+                        break;
+                }
                 break;
             case 13:
-                questionText.text = cardId + ". <b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#009960>緑6</color>か<color=#F2CC00>黄7</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#009960>Green sixes</color> or more <color=#F2CC00>Yellow sevens</color></b>?";
+                        break;
+                }
                 break;
             case 14:
-                questionText.text = cardId + ". <b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#F2CC00>黄2</color>か<color=#F2CC00>黄7</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#F2CC00>Yellow twos</color> or <color=#F2CC00>Yellow sevens</color></b>?";
+                        break;
+                }
                 break;
             case 15:
-                questionText.text = cardId + ". <b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#D91ACC>桃6</color>か<color=#009960>緑6</color></b>、どちらがより多いでしょうか";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#D91ACC>Pink sixes</color> or <color=#009960>Green sixes</color></b>?";
+                        break;
+                }
                 break;
             case 16:
-                questionText.text = cardId + ". <b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#0059FF>青7</color>か他の色の7</b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#0059FF>Blue sevens</color> or more sevens of other colors</b>?";
+                        break;
+                }
                 break;
             case 17:
-                questionText.text = cardId + ". <b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#A64C26>茶色</color>か<color=#0059FF>青色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#A64C26>Brown</color> or <color=#0059FF>Blue</color></b> numbers?";
+                        break;
+                }
                 break;
             case 18:
-                questionText.text = cardId + ". <b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#D90000>赤色</color>か<color=#D91ACC>桃色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#D90000>Red</color> or <color=#D91ACC>Pink</color></b> numbers?";
+                        break;
+                }
                 break;
             case 19:
-                questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#009960>緑色</color>か<color=#0059FF>青色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#009960>Blue</color></b> numbers?";
+                        break;
+                }
                 break;
             case 20:
-                questionText.text = cardId + ". <b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#F2CC00>黄色</color>か<color=#D91ACC>桃色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#F2CC00>Yellow</color> or more <color=#D91ACC>Pink</color></b> numbers?";
+                        break;
+                }
                 break;
             case 21:
-                questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#808080>黒色</color>か<color=#A64C26>茶色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#808080>Black</color> or more <color=#A64C26>Brown</color></b> numbers?";
+                        break;
+                }
                 break;
             case 22:
-                questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#808080>黒色</color>か<color=#D90000>赤色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#808080>Black</color> or more <color=#D90000>Red</color></b> numbers?";
+                        break;
+                }
                 break;
             case 23:
-                questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
+                        break;
+                    case Language.Japanese:
+                        questionText.text = cardId + ". <b><color=#009960>緑色</color>か<color=#F2CC00>黄色</color></b>、どちらがより多いでしょうか？";
+                        break;
+                    case Language.English:
+                        questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#F2CC00>Yellow</color></b> numbers?	";
+                        break;
+                }
                 break;
         }
+        #endregion
+
         yield return new WaitForSeconds(2);
 
         int answerKey = 0;
@@ -487,7 +945,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.reachEighteen ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 2:
                 // 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
@@ -496,7 +954,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.untilTwelve ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 3:
                 // 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
@@ -505,7 +963,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.sameNumberDifColor ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 4:
                 //有多少個牌架上的牌，出現三個<b>不同顏色</b>的數字？";
@@ -514,7 +972,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.threeColor ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 5:
                 //有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
@@ -523,7 +981,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.allOddEven ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 6:
                 //有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
@@ -532,7 +990,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.sameColorNumber ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 7:
                 //有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
@@ -541,7 +999,7 @@ public class Code777Manager : MonoBehaviour
                     if (answerPlayer != i)
                         answerKey += activePlayer[i].rack.consecutiveNumber ? 1 : 0;
                 }
-                answerText.text = answerKey + "組";
+                answerText.text = answerKey.ToString();
                 break;
             case 8:
                 //你看到<b>多少種顏色</b>的數字牌？";
@@ -570,7 +1028,7 @@ public class Code777Manager : MonoBehaviour
                     if (numberColorKey[i] > 0)
                         answerKey++;
                 }
-                answerText.text = answerKey + "種";
+                answerText.text = answerKey.ToString();
                 break;
             case 9:
                 // 有幾種<b>顏色</b>出現了<b>三次以上</b>？";
@@ -599,7 +1057,7 @@ public class Code777Manager : MonoBehaviour
                     if (numberColorKey[i] >= 3)
                         answerKey++;
                 }
-                answerText.text = answerKey + "種";
+                answerText.text = answerKey.ToString();
                 break;
             case 10:
                 //有幾種數字<b>完全沒有出現</b>？";
@@ -618,7 +1076,7 @@ public class Code777Manager : MonoBehaviour
                     if (numberColorKey[i] == 0)
                         answerKey++;
                 }
-                answerText.text = answerKey + "種";
+                answerText.text = answerKey.ToString();
                 break;
             case 11:
                 //<b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
@@ -634,7 +1092,7 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = answerKey + "張";
+                answerText.text = answerKey.ToString();
                 break;
             case 12:
                 //<b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
@@ -649,8 +1107,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑3</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" : "<b>一樣多</b>");
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 break;
             case 13:
                 //<b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
@@ -664,6 +1129,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].number == 7 && players[i].rack.tiles[j].color == "Y") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠6</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
@@ -681,6 +1155,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃2</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                 break;
@@ -696,6 +1179,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].number == 6 && players[i].rack.tiles[j].color == "G") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#009960>綠6</color></b>" : "<b>一樣多</b>");
@@ -713,6 +1205,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 answerText.text = (compareKey1> compareKey2) ? "<b><color=#0059FF>藍7</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>其他顏色7</color></b>" : "<b>一樣多</b>");
                 break;
@@ -728,6 +1229,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].color == "C") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>棕色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
@@ -745,6 +1255,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>紅色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
@@ -760,6 +1279,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].color == "C") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
@@ -777,6 +1305,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
@@ -792,6 +1329,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].color == "B") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#A64C26>棕色</color></b>" : "<b>一樣多</b>");
@@ -809,6 +1355,15 @@ public class Code777Manager : MonoBehaviour
                         }
                     }
                 }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
+                }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#D90000>紅色</color></b>" : "<b>一樣多</b>");
                 break;
@@ -824,6 +1379,15 @@ public class Code777Manager : MonoBehaviour
                             if (players[i].rack.tiles[j].color == "Y") compareKey2++;
                         }
                     }
+                }
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        break;
+                    case Language.Japanese:
+                        break;
+                    case Language.English:
+                        break;
                 }
                 answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
                                              ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
@@ -860,7 +1424,14 @@ public class Code777Manager : MonoBehaviour
         activePlayer[(answerPlayer + 1) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
 
         //玩家0的輔助模式
-        activePlayer[0].TileLight(assistMode);
+        TileLight();
+
+
+        //增加LOG
+        #region LOG增加的處理
+
+
+        #endregion
 
         //呼叫數字判定
         answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
@@ -1004,7 +1575,7 @@ public class Code777Manager : MonoBehaviour
             activePlayer[(callPlayer + 4) % 5].RackCheck(activePlayer, discardTile);
 
             //玩家0的輔助模式
-            activePlayer[0].TileLight(assistMode);
+            TileLight();
 
             activePlayer[callPlayer].IconRecover();
             GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle =
@@ -1043,6 +1614,13 @@ public class Code777Manager : MonoBehaviour
     {
         playerCall = false;
         activePlayer[0].BecomeCallPlayer();
+
+        numberTile[0].sprite = tileSpriteBack;
+        numberTile[1].sprite = tileSpriteBack;
+        numberTile[2].sprite = tileSpriteBack;
+        numberCallTile[0] = -1;
+        numberCallTile[1] = -1;
+        numberCallTile[2] = -1;
 
         //畫面訊息刷新
         questionText.text = "";
@@ -1208,7 +1786,7 @@ public class Code777Manager : MonoBehaviour
                 activePlayer[4].RackCheck(activePlayer, discardTile);
 
                 //玩家0的輔助模式
-                activePlayer[0].TileLight(assistMode);
+                TileLight();
 
                 activePlayer[0].IconRecover();
                 GameObject.Find("Player0Name").GetComponent<Text>().fontStyle =
@@ -1302,7 +1880,7 @@ public class Code777Manager : MonoBehaviour
             activePlayer[4].RackCheck(activePlayer, discardTile);
 
             //玩家0的輔助模式
-            activePlayer[0].TileLight(assistMode);
+            TileLight();
 
             activePlayer[0].IconRecover();
             GameObject.Find("Player0Name").GetComponent<Text>().fontStyle =
@@ -1321,7 +1899,7 @@ public class Code777Manager : MonoBehaviour
                 {
                     case "G": debugMessage += "<color=#009960>"; break;
                     case "Y": debugMessage += "<color=#F2CC00>"; break;
-                    case "K": debugMessage += "<color=#808080>"; break;
+                    case "K": debugMessage += "<color=#404040>"; break;
                     case "B": debugMessage += "<color=#A64C26>"; break;
                     case "R": debugMessage += "<color=#D90000>"; break;
                     case "P": debugMessage += "<color=#D91ACC>"; break;

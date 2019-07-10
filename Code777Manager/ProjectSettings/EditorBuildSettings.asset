@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Code777GamePlay.unity
+    path: Assets/Scenes/Code777GamePlay.unity
     guid: 99dc5bdc2b7d8964f8cd4256bfe58994
   m_configObjects: {}
