@@ -111,8 +111,8 @@ public class Code777Manager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        assistMode = false;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
-        advancedMode = false;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
+        assistMode = Code777Menu.difficulty == Difficulty.Assist;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
+        advancedMode = Code777Menu.difficulty == Difficulty.Advanced;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
 
         questionText.text = "";
         answerText.text = "";
@@ -504,15 +504,17 @@ public class Code777Manager : MonoBehaviour
 
     void JumpToLatestLog()
     {
-        logSlider.value = 1;
+        logSlider.gameObject.SetActive(logMessage.Count > 5);
+        logSlider.maxValue = logMessage.Count - 5;
+        logSlider.value = logSlider.maxValue;
         for (int i = 0; i < 5; i++)
         {
-            logTextId[i].text = (i + 1).ToString();
+            logTextId[i].text = (logMessage.Count - 4 + i).ToString();
             logTextContent[i].text = logMessage[logMessage.Count - 5 + i];
         }
     }
 
-    void LogSliding()
+    public void LogSliding()
     {
         //Silde的邏輯：
         //假設LogList小於等於5個字串，Slide不起作用
@@ -520,24 +522,13 @@ public class Code777Manager : MonoBehaviour
         //假設LogList等於7個字串，會把List分割為 [0],[1],[2],[3],[4] 和 [1],[2],[3],[4],[5] 和 [2],[3],[4],[5],[6] 三個區間
 
         //因此邏輯為，將Value分割為 logMessage.Count - 4 個區間
-        decimal slideCell = 1M / (logMessage.Count - 4);  //如果是6個LOG，區間是2個，每個0.5；7個LOG，區間是3個，每個0.333；8個LOG；區間是4個，每個0.25。
-        int period;
-        if(logSlider.value==1)
+        //如果是6個LOG，區間是2個，每個0.5；7個LOG，區間是3個，每個0.333；8個LOG；區間是4個，每個0.25。
+
+        int segement = (int)logSlider.value;
+        for (int i = 0; i < 5; i++)
         {
-            for (int i = 0; i < 5; i++)
-            {
-                logTextId[i].text = (i + 1).ToString();
-                logTextContent[i].text = logMessage[logMessage.Count - 5 + i];
-            }
-        }
-        else
-        {
-            period = (int) System.Math.Floor(((decimal) logSlider.value) / slideCell);
-            for (int i = period; i < period+5; i++)
-            {
-                logTextId[i].text = (i + 1).ToString();
-                logTextContent[i].text = logMessage[i];
-            }
+            logTextId[i].text = (segement + i + 1).ToString();
+            logTextContent[i].text = logMessage[segement + i];
         }
     }
 
@@ -569,6 +560,9 @@ public class Code777Manager : MonoBehaviour
     {
         //Debug用測試訊息
         string debugMessage = "";
+
+        //Log用訊息
+        string logInsert = "";
 
         //隱藏CALL PASS按鈕
         callButton.gameObject.SetActive(false);
@@ -608,12 +602,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>18以上</b>？";
+                        logInsert = logInsert + cardId + ". 三個數字總和是18以上的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". 三つの数字の和が<b>18以上</b>のラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三つの数の和が18以上のラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks is the sum of the numbers <b>18 or more</b>?";
+                        logInsert = logInsert + cardId + ". Racks in sum of the numbers 18+";
                         break;
                 }
                 break;
@@ -622,12 +619,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，三個數字總和是<b>12以下</b>？";
+                        logInsert = logInsert + cardId + ". 三個數字總和是12以下的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". 三つの数字の和が<b>12以下</b>のラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三つの数の和が12以下のラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks is the sum of the numbers <b>12 or less</b>?";
+                        logInsert = logInsert + cardId + ". Racks in sum of the numbers 12-";
                         break;
                 }
                 break;
@@ -636,12 +636,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>不同顏色的相同數字</b>？";
+                        logInsert = logInsert + cardId + ". 出現不同顏色的相同數字的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b>色が違う同じ数字</b>があるラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 色が違う同じ数字があるラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks is there <b>a same number in different colors</b>? ";
+                        logInsert = logInsert + cardId + ". Racks in same number in different colors";
                         break;
                 }
                 break;
@@ -650,12 +653,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>三個不同顏色</b>的數字？";
+                        logInsert = logInsert + cardId + ". 三個數字不同顏色的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b>三つの数字の色が違う</b>ラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三つの数字の色が違うラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks are there <b>3 different colors</b>?";
+                        logInsert = logInsert + cardId + ". Racks in 3 different colors";
                         break;
                 }
                 break;
@@ -664,12 +670,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，三個數字<b>皆是奇數</b>或<b>皆是偶數</b>？";
+                        logInsert = logInsert + cardId + ". 三個數字皆是奇數或皆是偶數的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". 三つの数字が<b>全員奇数</b>か<b>全員偶数</b>であるラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三つの数字が全員奇数か全員偶数であるラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks are the numbers either <b>all even</b> or <b>all uneven</b>?";
+                        logInsert = logInsert + cardId + ". Racks in all even or all uneven";
                         break;
                 }
                 break;
@@ -678,12 +687,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，出現<b>相同顏色的相同數字</b>？";
+                        logInsert = logInsert + cardId + ". 出現相同顏色且相同數字的牌架";
                         break;
                     case Language.Japanese:
-                        questionText.text = cardId + ". <b>色も数字も同じなタイル</b>があるラックがいくつでしょうか？";
+                        questionText.text = cardId + ". <b>色も数字も同じなカード</b>があるラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 色も数字も同じなカードがあるラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks are there <b>at least 2 identical cards</b>?";
+                        logInsert = logInsert + cardId + ". Racks in 2+ identical cards";
                         break;
                 }
                 break;
@@ -692,12 +704,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有多少個牌架上的牌，三個數字是<b>連續的數字</b>？";
+                        logInsert = logInsert + cardId + ". 三個數字是連續數字的牌架";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". 三つの数字が<b>連続番号</b>であるラックがいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三つの数字が続くラック";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". On how many racks do you see <b>3 consecutive numbers</b>?";
+                        logInsert = logInsert + cardId + ". Racks in 3 consecutive numbers";
                         break;
                 }
                 break;
@@ -706,12 +721,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 你看到<b>多少種顏色</b>的數字牌？";
+                        logInsert = logInsert + cardId + ". 看到的顏色數量";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". 色が<b>いくつ</b>見えるでしょうか？";
+                        logInsert = logInsert + cardId + ". 見えた色の数";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". <b>How many colors</b> do you see?";
+                        logInsert = logInsert + cardId + ". Number of colors seen";
                         break;
                 }
                 break;
@@ -720,12 +738,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有幾種<b>顏色</b>出現了<b>三次以上</b>？";
+                        logInsert = logInsert + cardId + ". 出現三次以上的顏色的種數";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b>三枚以上</b>である<b>色</b>がいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 三枚以上の色の数";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". How many <b>colors</b> appear <b>at least 3 times</b>?";
+                        logInsert = logInsert + cardId + ". Number of colors which appear 3+ times";
                         break;
                 }
                 break;
@@ -734,12 +755,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". 有幾種數字<b>完全沒有出現</b>？";
+                        logInsert = logInsert + cardId + ". 完全沒出現的數字的種類數";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b>全然出ない</b>数字がいくつでしょうか？";
+                        logInsert = logInsert + cardId + ". 全然出ない数字の数";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". How many numbers are <b>missing</b>?";
+                        logInsert = logInsert + cardId + ". Number of missing numbers";
                         break;
                 }
                 break;
@@ -748,12 +772,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color></b>這三種牌，你總共看到幾張？";
+                        logInsert = logInsert + cardId + ". <color=#009960>綠1</color>、<color=#808080>黑5</color>、<color=#D91ACC>粉紅7</color>的合計個數";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#009960>緑1</color>、<color=#808080>黒5</color>、<color=#D91ACC>桃7</color></b>が合計いくつ見えるでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#009960>緑1</color>、<color=#808080>黒5</color>、<color=#D91ACC>桃7</color>の合計の数";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". How many of the following do you see in all: <b><color=#009960>Green ones</color>, <color=#808080>Black fives</color>, <color=#D91ACC>Pink sevens</color></b>?";
+                        logInsert = logInsert + cardId + ". <color=#009960>Green ones</color>, <color=#808080>Black fives</color>, <color=#D91ACC>Pink sevens</color> in all";
                         break;
                 }
                 break;
@@ -762,12 +789,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黑3</color>和<color=#D91ACC>粉紅6</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#808080>黒3</color>か<color=#D91ACC>桃6</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黒3</color>か<color=#D91ACC>桃6</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#808080>Black threes</color> or <color=#D91ACC>Pink sixes</color></b>?";
+                        logInsert = logInsert + cardId + ". More <color=#808080>Black threes</color> or <color=#D91ACC>Pink sixes</color>?";
                         break;
                 }
                 break;
@@ -776,12 +806,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#009960>綠6</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#009960>綠6</color>和<color=#F2CC00>黃7</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#009960>緑6</color>か<color=#F2CC00>黄7</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#009960>緑6</color>か<color=#F2CC00>黄7</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#009960>Green sixes</color> or more <color=#F2CC00>Yellow sevens</color></b>?";
+                        logInsert = logInsert + cardId + ". More <color=#009960>Green sixes</color> or more <color=#F2CC00>Yellow sevens</color>?";
                         break;
                 }
                 break;
@@ -790,12 +823,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#F2CC00>黄2</color>か<color=#F2CC00>黄7</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#F2CC00>黄2</color>か<color=#F2CC00>黄7</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#F2CC00>Yellow twos</color> or <color=#F2CC00>Yellow sevens</color></b>?";
+                        logInsert = logInsert + cardId + ". More <color=#F2CC00>Yellow twos</color> or <color=#F2CC00>Yellow sevens</color>?";
                         break;
                 }
                 break;
@@ -804,12 +840,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#D91ACC>桃6</color>か<color=#009960>緑6</color></b>、どちらがより多いでしょうか";
+                        logInsert = logInsert + cardId + ". <color=#D91ACC>桃6</color>か<color=#009960>緑6</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#D91ACC>Pink sixes</color> or <color=#009960>Green sixes</color></b>?";
+                        logInsert = logInsert + cardId + ". More <color=#D91ACC>Pink sixes</color> or <color=#009960>Green sixes</color>?";
                         break;
                 }
                 break;
@@ -818,12 +857,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#0059FF>藍7</color>和其他顏色的7，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#0059FF>青7</color>か他の色の7</b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#0059FF>青7</color>か他の色の7、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#0059FF>Blue sevens</color> or more sevens of other colors</b>?";
+                        logInsert = logInsert + cardId + ". More <color=#0059FF>Blue sevens</color> or more sevens of other colors?";
                         break;
                 }
                 break;
@@ -832,12 +874,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#A64C26>棕色</color>和<color=#0059FF>藍色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#A64C26>茶色</color>か<color=#0059FF>青色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#A64C26>茶色</color>か<color=#0059FF>青色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#A64C26>Brown</color> or <color=#0059FF>Blue</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#A64C26>Brown</color> or <color=#0059FF>Blue</color>?";
                         break;
                 }
                 break;
@@ -846,12 +891,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#D90000>赤色</color>か<color=#D91ACC>桃色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#D90000>赤色</color>か<color=#D91ACC>桃色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#D90000>Red</color> or <color=#D91ACC>Pink</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#D90000>Red</color> or <color=#D91ACC>Pink</color>?";
                         break;
                 }
                 break;
@@ -860,12 +908,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#009960>綠色</color>和<color=#0059FF>藍色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#009960>緑色</color>か<color=#0059FF>青色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#009960>緑色</color>か<color=#0059FF>青色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#009960>Blue</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#009960>Green</color> or more <color=#009960>Blue</color>?";
                         break;
                 }
                 break;
@@ -874,12 +925,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#F2CC00>黄色</color>か<color=#D91ACC>桃色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#F2CC00>黄色</color>か<color=#D91ACC>桃色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#F2CC00>Yellow</color> or more <color=#D91ACC>Pink</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#F2CC00>Yellow</color> or more <color=#D91ACC>Pink</color>?";
                         break;
                 }
                 break;
@@ -888,12 +942,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黑色</color>和<color=#A64C26>棕色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#808080>黒色</color>か<color=#A64C26>茶色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黒色</color>か<color=#A64C26>茶色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#808080>Black</color> or more <color=#A64C26>Brown</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#808080>Black</color> or more <color=#A64C26>Brown</color>?";
                         break;
                 }
                 break;
@@ -902,12 +959,15 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黑色</color>和<color=#D90000>紅色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#808080>黒色</color>か<color=#D90000>赤色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#808080>黒色</color>か<color=#D90000>赤色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#808080>Black</color> or more <color=#D90000>Red</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#808080>Black</color> or more <color=#D90000>Red</color>?";
                         break;
                 }
                 break;
@@ -916,16 +976,33 @@ public class Code777Manager : MonoBehaviour
                 {
                     case Language.Chinese:
                         questionText.text = cardId + ". <b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
+                        logInsert = logInsert + cardId + ". <color=#009960>綠色</color>和<color=#F2CC00>黃色</color>，何者較多？";
                         break;
                     case Language.Japanese:
                         questionText.text = cardId + ". <b><color=#009960>緑色</color>か<color=#F2CC00>黄色</color></b>、どちらがより多いでしょうか？";
+                        logInsert = logInsert + cardId + ". <color=#009960>緑色</color>か<color=#F2CC00>黄色</color>、より多いのは？";
                         break;
                     case Language.English:
                         questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#F2CC00>Yellow</color></b> numbers?	";
+                        logInsert = logInsert + cardId + ". More <color=#009960>Green</color> or more <color=#F2CC00>Yellow</color>?";
                         break;
                 }
                 break;
         }
+
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>的回答： ";
+                break;
+            case Language.Japanese:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>の答え： ";
+                break;
+            case Language.English:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>'s answer:  ";
+                break;
+        }
+       
         #endregion
 
         yield return new WaitForSeconds(2);
@@ -1110,10 +1187,16 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑3</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黒3</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>桃6</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>Black Three</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>Pink Six</color></b>" : "<b>Even</b>");
                         break;
                 }
                 break;
@@ -1133,14 +1216,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠6</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>緑6</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黄7</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>Green Six</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>Yellow Seven</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠6</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                 break;
             case 14:
                 //<b><color=#F2CC00>黃2</color>和<color=#F2CC00>黃7</color></b>，何者較多？";
@@ -1158,14 +1245,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃2</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黄2</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黄7</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>Yellow Two</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>Yellow Seven</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃2</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃7</color></b>" : "<b>一樣多</b>");
                 break;
             case 15:
                 //<b><color=#D91ACC>粉紅6</color>和<color=#009960>綠6</color></b>，何者較多？";
@@ -1183,14 +1274,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#009960>綠6</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>桃6</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#009960>緑6</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>Pink Six</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#009960>Green Six</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D91ACC>粉紅6</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#009960>綠6</color></b>" : "<b>一樣多</b>");
                 break;
             case 16:
                 //<b><color=#0059FF>藍7</color>和其他顏色的7</b>，何者較多？";
@@ -1208,15 +1303,19 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#0059FF>藍7</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>其他顏色7</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#0059FF>青7</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>他7</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#0059FF>Blue Seven</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>Other Seven</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1> compareKey2) ? "<b><color=#0059FF>藍7</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#C0C0C0>其他顏色7</color></b>" : "<b>一樣多</b>");
-                break;
+               break;
             case 17:
                 //<b><color=#A64C26>棕色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
                 for (int i = 0; i < players.Count; i++)
@@ -1233,14 +1332,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>棕色</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>茶色</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>青色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>Brown</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>Blue</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#A64C26>棕色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                 break;
             case 18:
                 //<b><color=#D90000>紅色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
@@ -1258,14 +1361,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>紅色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>赤色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>桃色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>Red</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>Pink</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#D90000>紅色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 19:
                 //<b><color=#009960>綠色</color>和<color=#0059FF>藍色</color></b>，何者較多？";
@@ -1283,14 +1390,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>緑色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#0059FF>青色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>Green</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#0059FF>Blue</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#0059FF>藍色</color></b>" : "<b>一樣多</b>");
                 break;
             case 20:
                 //<b><color=#F2CC00>黃色</color>和<color=#D91ACC>粉紅色</color></b>，何者較多？";
@@ -1308,14 +1419,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黄色</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>桃色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>Yellow</color></b>" :
+                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>Pink</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D91ACC>粉紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 21:
                 //<b><color=#808080>黑色</color>和<color=#A64C26>棕色</color></b>，何者較多？";
@@ -1333,14 +1448,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>棕色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黒色</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>茶色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>Black</color></b>" :
+                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>Brown</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#A64C26>棕色</color></b>" : "<b>一樣多</b>");
                 break;
             case 22:
                 //<b><color=#808080>黑色</color>和<color=#D90000>紅色</color></b>，何者較多？";
@@ -1358,14 +1477,18 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D90000>紅色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黒色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D90000>赤色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>Black</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#D90000>Red</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#808080>黑色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#D90000>紅色</color></b>" : "<b>一樣多</b>");
                 break;
             case 23:
                 //<b><color=#009960>綠色</color>和<color=#F2CC00>黃色</color></b>，何者較多？";
@@ -1383,16 +1506,22 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
                         break;
                     case Language.Japanese:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>緑色</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黄色</color></b>" : "<b>等しい</b>");
                         break;
                     case Language.English:
+                        answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>Green</color></b>" :
+                                            ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>Yellow</color></b>" : "<b>Even</b>");
                         break;
                 }
-                answerText.text = (compareKey1 > compareKey2) ? "<b><color=#009960>綠色</color></b>" :
-                                             ((compareKey1 < compareKey2) ? "<b><color=#F2CC00>黃色</color></b>" : "<b>一樣多</b>");
                 break;
         }
+        logInsert = logInsert + answerText.text;
+
         debugMessage = debugMessage + activePlayer[answerPlayer].name + "回答： " + questionText.text + "　" + answerText.text +"\n";
         debugMessage = debugMessage + activePlayer[answerPlayer].name + "所見： ";
         for(int i= answerPlayer+1; i< answerPlayer+activePlayer.Count;i++)
@@ -1429,8 +1558,8 @@ public class Code777Manager : MonoBehaviour
 
         //增加LOG
         #region LOG增加的處理
-
-
+        logMessage.Add(logInsert);
+        JumpToLatestLog();
         #endregion
 
         //呼叫數字判定
@@ -1460,25 +1589,30 @@ public class Code777Manager : MonoBehaviour
     {
         //DEBUG用訊息
         string debugMessage;
+        string rackMessage = "";
+        string logInsert = "";
 
         #region 紀錄玩家猜測前牌架
-        debugMessage = "[ <b>";
+        debugMessage = "【<b> ";
+        rackMessage = "【<b> ";
         for (int j = 0; j < 3; j++)
         {
             switch (activePlayer[callPlayer].rack.tiles[j].color)
             {
-                case "G": debugMessage += "<color=#009960>"; break;
-                case "Y": debugMessage += "<color=#F2CC00>"; break;
-                case "K": debugMessage += "<color=#404040>"; break;
-                case "B": debugMessage += "<color=#A64C26>"; break;
-                case "R": debugMessage += "<color=#D90000>"; break;
-                case "P": debugMessage += "<color=#D91ACC>"; break;
-                case "C": debugMessage += "<color=#0059FF>"; break;
+                case "G": debugMessage += "<color=#009960>"; rackMessage += "<color=#009960>"; break;
+                case "Y": debugMessage += "<color=#F2CC00>"; rackMessage += "<color=#F2CC00>"; break;
+                case "K": debugMessage += "<color=#404040>"; rackMessage += "<color=#808080>"; break;
+                case "B": debugMessage += "<color=#A64C26>"; rackMessage += "<color=#A64C26>"; break;
+                case "R": debugMessage += "<color=#D90000>"; rackMessage += "<color=#D90000>"; break;
+                case "P": debugMessage += "<color=#D91ACC>"; rackMessage += "<color=#D91ACC>"; break;
+                case "C": debugMessage += "<color=#0059FF>"; rackMessage += "<color=#0059FF>"; break;
                 default: break;
             }
             debugMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
+            rackMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
         }
-        debugMessage += "</b>]";
+        debugMessage += "</b>】";
+        rackMessage += "</b>】";
         #endregion
 
         //當玩家確定自己牌架上的數字時，會立即進行猜測。
@@ -1489,7 +1623,21 @@ public class Code777Manager : MonoBehaviour
         //畫面訊息刷新
         questionText.text = "";
         answerText.text = "";
-        speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 作答數字";
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 作答數字";
+                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>答對了牌架"+ rackMessage + " ";
+                break;
+            case Language.Japanese:
+                speakerText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> がコールする";
+                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>がラック的中" + rackMessage + " ";
+                break;
+            case Language.English:
+                speakerText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> calls the number.";
+                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> calls correctly" + rackMessage + " ";
+                break;
+        }
         GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
         GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().color = new Color(0, 0.75F, 1, 1);
 
@@ -1500,7 +1648,18 @@ public class Code777Manager : MonoBehaviour
         //讓答對的效果跳出來
         //GameObject.Find("Player" + callPlayer + "Correct").SetActive(true);
         correctCall[callPlayer].SetActive(true);
-        questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字";
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字";
+                break;
+            case Language.Japanese:
+                questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>あたります";
+                break;
+            case Language.English:
+                questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>'s calling is correct.";
+                break;
+        }
         activePlayer[callPlayer].GetPoint();
 
         //暫停2秒
@@ -1511,11 +1670,28 @@ public class Code777Manager : MonoBehaviour
         if (activePlayer[callPlayer].victory>=3)
         {
             Debug.Log(debugMessage);
+            logMessage.Add(logInsert);
 
             //如果玩家獲得3分，遊戲就結束。
-            questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字\n" +
-                                            "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 獲得勝利";
-            answerText.text = "遊戲結束";
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 獲得勝利";
+                    answerText.text = "遊戲結束";
+                    logMessage.Add("<color=#FF8080>遊戲結束</color>");
+                    break;
+                case Language.Japanese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> はゲームに勝ちます";
+                    answerText.text = "ゲームオーバー";
+                    logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
+                    break;
+                case Language.English:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> wins the game.";
+                    answerText.text = "GAME OVER";
+                    logMessage.Add("<color=#FF8080>GAME OVER</color>");
+                    break;
+            }
+            JumpToLatestLog();
 
             //開啟Player側的覆蓋Tile
             playerTileBack[0].color = new Color(1, 1, 1, 0);
@@ -1528,8 +1704,18 @@ public class Code777Manager : MonoBehaviour
         else
         {
             //答對跟答錯時，玩家獲得的情報不一樣
-            questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字\n" +
-                                "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 重設牌架";
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 重設牌架";
+                    break;
+                case Language.Japanese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> ラックリセット";
+                    break;
+                case Language.English:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> resets the rack.";
+                    break;
+            }
 
             //不論答對或答錯，玩家都會丟棄目前自己架上的3張牌，然後再從Pile抽3張起來
             discardTile.Add( new Tile(activePlayer[callPlayer].rack.tiles[0].number,
@@ -1587,25 +1773,42 @@ public class Code777Manager : MonoBehaviour
 
             #region 紀錄玩家猜測後牌架
             debugMessage = debugMessage + "\n牌架更換為";
-            debugMessage = debugMessage + "[ <b>";
+            debugMessage = debugMessage + "【<b> ";
+            rackMessage = "【<b> ";
             for (int j = 0; j < 3; j++)
             {
                 switch (activePlayer[callPlayer].rack.tiles[j].color)
                 {
-                    case "G": debugMessage += "<color=#009960>"; break;
-                    case "Y": debugMessage += "<color=#F2CC00>"; break;
-                    case "K": debugMessage += "<color=#404040>"; break;
-                    case "B": debugMessage += "<color=#A64C26>"; break;
-                    case "R": debugMessage += "<color=#D90000>"; break;
-                    case "P": debugMessage += "<color=#D91ACC>"; break;
-                    case "C": debugMessage += "<color=#0059FF>"; break;
+                    case "G": debugMessage += "<color=#009960>"; rackMessage += "<color=#009960>"; break;
+                    case "Y": debugMessage += "<color=#F2CC00>"; rackMessage += "<color=#F2CC00>"; break;
+                    case "K": debugMessage += "<color=#404040>"; rackMessage += "<color=#808080>"; break;
+                    case "B": debugMessage += "<color=#A64C26>"; rackMessage += "<color=#A64C26>"; break;
+                    case "R": debugMessage += "<color=#D90000>"; rackMessage += "<color=#D90000>"; break;
+                    case "P": debugMessage += "<color=#D91ACC>"; rackMessage += "<color=#D91ACC>"; break;
+                    case "C": debugMessage += "<color=#0059FF>"; rackMessage += "<color=#0059FF>"; break;
                     default: break;
                 }
                 debugMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
+                rackMessage += activePlayer[callPlayer].rack.tiles[j].number + " </color>";
             }
-            debugMessage += "</b>]";
+            debugMessage += "</b>】";
+            rackMessage += "</b>】";
             #endregion
 
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>牌架重設為" + rackMessage ;
+                    break;
+                case Language.Japanese:
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>ラックリセット" + rackMessage ;
+                    break;
+                case Language.English:
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>Rack reset" + rackMessage ;
+                    break;
+            }
+            logMessage.Add(logInsert);
+            JumpToLatestLog();
             Debug.Log(debugMessage);
         }
     }
@@ -1625,7 +1828,18 @@ public class Code777Manager : MonoBehaviour
         //畫面訊息刷新
         questionText.text = "";
         answerText.text = "";
-        speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[0].name + "</color> 作答數字";
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[0].name + "</color> 作答數字";
+                break;
+            case Language.Japanese:
+                speakerText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> がコールする";
+                break;
+            case Language.English:
+                speakerText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> calls the number.";
+                break;
+        }
         GameObject.Find("Player0Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
         GameObject.Find("Player0Name").GetComponent<Text>().color = new Color(0, 0.75F, 1, 1);
 
@@ -1647,25 +1861,31 @@ public class Code777Manager : MonoBehaviour
     {
         //Debug用訊息
         string debugMessage = "";
+        string guessMessage = "";
+        string rackMessage = "";
+        string logInsert = "";
 
         #region 紀錄玩家猜測前牌架
-        debugMessage = "[ <b>";
+        debugMessage = "【<b> ";
+        rackMessage = "【<b> ";
         for (int j = 0; j < 3; j++)
         {
             switch (activePlayer[0].rack.tiles[j].color)
             {
-                case "G": debugMessage += "<color=#009960>"; break;
-                case "Y": debugMessage += "<color=#F2CC00>"; break;
-                case "K": debugMessage += "<color=#404040>"; break;
-                case "B": debugMessage += "<color=#A64C26>"; break;
-                case "R": debugMessage += "<color=#D90000>"; break;
-                case "P": debugMessage += "<color=#D91ACC>"; break;
-                case "C": debugMessage += "<color=#0059FF>"; break;
+                case "G": debugMessage += "<color=#009960>"; rackMessage += "<color=#009960>"; break;
+                case "Y": debugMessage += "<color=#F2CC00>"; rackMessage += "<color=#F2CC00>"; break;
+                case "K": debugMessage += "<color=#404040>"; rackMessage += "<color=#808080>"; break;
+                case "B": debugMessage += "<color=#A64C26>"; rackMessage += "<color=#A64C26>"; break;
+                case "R": debugMessage += "<color=#D90000>"; rackMessage += "<color=#D90000>"; break;
+                case "P": debugMessage += "<color=#D91ACC>"; rackMessage += "<color=#D91ACC>"; break;
+                case "C": debugMessage += "<color=#0059FF>"; rackMessage += "<color=#0059FF>"; break;
                 default: break;
             }
             debugMessage += activePlayer[0].rack.tiles[j].number + " </color>";
+            rackMessage += activePlayer[0].rack.tiles[j].number + " </color>";
         }
-        debugMessage += "</b>]";
+        debugMessage += "</b>】";
+        rackMessage += "</b>】";
         #endregion
 
 
@@ -1675,39 +1895,57 @@ public class Code777Manager : MonoBehaviour
         sortAnswer.Add(numberCallTile[2]);
         sortAnswer.Sort();
         string defineAnswer = "";
-        for(int i=0;i<3;i++)
+        guessMessage = "【<b> ";
+        for (int i=0;i<3;i++)
         {
             if( advancedMode )
             {
                 switch(sortAnswer[i])
                 {
-                    case 0: defineAnswer += "1G";  break;
-                    case 1: defineAnswer += "2Y"; break;
-                    case 2: defineAnswer += "3K"; break;
-                    case 3: defineAnswer += "4B"; break;
-                    case 4: defineAnswer += "5R"; break;
-                    case 5: defineAnswer += "5K"; break;
-                    case 6: defineAnswer += "6P"; break;
-                    case 7: defineAnswer += "6G"; break;
-                    case 8: defineAnswer += "7Y"; break;
-                    case 9: defineAnswer += "7P"; break;
-                    case 10: defineAnswer += "7C"; break;
+                    case 0: defineAnswer += "1G"; guessMessage += "<color=#009960>1</color> "; break;
+                    case 1: defineAnswer += "2Y"; guessMessage+= "<color=#F2CC00>2</color> "; break;
+                    case 2: defineAnswer += "3K"; guessMessage+= "<color=#808080>3</color> "; break;
+                    case 3: defineAnswer += "4B"; guessMessage+= "<color=#A64C26>4</color> "; break;
+                    case 4: defineAnswer += "5R"; guessMessage+= "<color=#D90000>5</color> "; break;
+                    case 5: defineAnswer += "5K"; guessMessage+= "<color=#808080>5</color> "; break;
+                    case 6: defineAnswer += "6P"; guessMessage+= "<color=#D91ACC>6</color> "; break;
+                    case 7: defineAnswer += "6G"; guessMessage+="<color=#009960>6</color> "; break;
+                    case 8: defineAnswer += "7Y"; guessMessage+= "<color=#F2CC00>7</color> "; break;
+                    case 9: defineAnswer += "7P"; guessMessage+= "<color=#D91ACC>7</color> "; break;
+                    case 10: defineAnswer += "7C"; guessMessage+= "<color=#0059FF>7</color> "; break;
                 }
             }
             else
             {
                 defineAnswer += (sortAnswer[i] + 1).ToString();
+                guessMessage += (sortAnswer[i] + 1).ToString() + " ";
             }
         }
+        guessMessage += "</b>】";
 
         //正誤判定
-        if( (advancedMode && defineAnswer == activePlayer[0].rack.numberColorMatch) || (!advancedMode && defineAnswer == activePlayer[0].rack.numberMatch))
+        if ( (advancedMode && defineAnswer == activePlayer[0].rack.numberColorMatch) || (!advancedMode && defineAnswer == activePlayer[0].rack.numberMatch))
         {
+
             debugMessage = activePlayer[0].name + "答對了牌架" + debugMessage;
 
             //正解
             correctCall[0].SetActive(true);
-            questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字";
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>答對了牌架" + rackMessage + " ";
+                    break;
+                case Language.Japanese:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>あたります";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>がラック的中" + rackMessage + " ";
+                    break;
+                case Language.English:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>'s calling is correct.";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color> calls correctly" + rackMessage + " ";
+                    break;
+            }
             activePlayer[0].GetPoint();
 
             //開啟Player側的覆蓋Tile
@@ -1722,11 +1960,28 @@ public class Code777Manager : MonoBehaviour
             if (activePlayer[0].victory >= 3)
             {
                 Debug.Log(debugMessage);
+                logMessage.Add(logInsert);
 
-                //如果玩家獲得3分，遊戲就結束。
-                questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字\n" +
-                                                "<color=#00C0FF>" + activePlayer[0].name + "</color> 獲得勝利";
-                answerText.text = "遊戲結束";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 獲得勝利";
+                        answerText.text = "遊戲結束";
+                        logMessage.Add("<color=#FF8080>遊戲結束</color>");
+                        break;
+                    case Language.Japanese:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はゲームに勝ちます";
+                        answerText.text = "ゲームオーバー";
+                        logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
+                        break;
+                    case Language.English:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> wins the game.";
+                        answerText.text = "GAME OVER";
+                        logMessage.Add("<color=#FF8080>GAME OVER</color>");
+                        break;
+                }
+
+                JumpToLatestLog();
 
                 restartButton.gameObject.SetActive(true);
                 status = GameStatus.GameSet;
@@ -1739,8 +1994,21 @@ public class Code777Manager : MonoBehaviour
                 playerTileBack[2].color = new Color(1, 1, 1, 1);
 
                 //答對跟答錯時，玩家獲得的情報不一樣
-                questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字\n" +
-                                    "<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                switch (Code777Menu.language)
+                {
+                    case Language.Chinese:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                        break;
+                    case Language.Japanese:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はラックをリセットする";
+                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はラックをリセットする";
+                        break;
+                    case Language.English:
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                        break;
+                }
 
                 //不論答對或答錯，玩家都會丟棄目前自己架上的3張牌，然後再從Pile抽3張起來
                 discardTile.Add(new Tile(activePlayer[0].rack.tiles[0].number,
@@ -1818,6 +2086,8 @@ public class Code777Manager : MonoBehaviour
                 #endregion
 
                 Debug.Log(debugMessage);
+                logMessage.Add(logInsert);
+                JumpToLatestLog();
             }
         }
         else
@@ -1826,16 +2096,42 @@ public class Code777Manager : MonoBehaviour
 
             //答錯
             wrongCall[0].SetActive(true);
-            questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答錯了數字";
-
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答錯了數字";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>猜測" + guessMessage + "但答錯了";
+                    break;
+                case Language.Japanese:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>はずれます";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>が" + guessMessage + "コールしたがはずれた";
+                    break;
+                case Language.English:
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>'s calling is wrong.";
+                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color> calls " + guessMessage + " but wrong.";
+                    break;
+            }
             yield return new WaitForSeconds(2);
 
             wrongCall[0].SetActive(false);
             playerInputUI.SetActive(false);
 
             //答對跟答錯時，玩家獲得的情報不一樣
-            questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答錯了數字\n" +
-                                "<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+            switch (Code777Menu.language)
+            {
+                case Language.Chinese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                    break;
+                case Language.Japanese:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>  ラックリセット";
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>  ラックリセット";
+                    break;
+                case Language.English:
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                    break;
+            }
 
             //不論答對或答錯，玩家都會丟棄目前自己架上的3張牌，然後再從Pile抽3張起來
             discardTile.Add(new Tile(activePlayer[0].rack.tiles[0].number,
@@ -1912,6 +2208,8 @@ public class Code777Manager : MonoBehaviour
             #endregion
 
             Debug.Log(debugMessage);
+            logMessage.Add(logInsert);
+            JumpToLatestLog();
         }
 
     }

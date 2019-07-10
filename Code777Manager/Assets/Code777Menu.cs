@@ -31,6 +31,9 @@ public class Code777Menu : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// 語言按鈕左鍵按下
+    /// </summary>
     public void LanguageLeft()
     {
         //中文→英文；日文→中文；英文→日文
@@ -104,6 +107,9 @@ public class Code777Menu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 語言按鈕右鍵按下
+    /// </summary>
     public void LanguageRight()
     {
         //中文→日文；日文→英文；英文→中文
@@ -177,6 +183,9 @@ public class Code777Menu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 難度按鈕左鍵按下
+    /// </summary>
     public void DifficultyLeft()
     {
         //輔助→進階；一般→輔助；進階→一般
@@ -247,6 +256,9 @@ public class Code777Menu : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 難度按鈕右鍵按下
+    /// </summary>
     public void DifficultyRight()
     {
         //輔助→一般；一般→進階；進階→輔助
@@ -315,5 +327,10 @@ public class Code777Menu : MonoBehaviour
             default:
                 break;
         }
+    }
+
+    public void StartButton()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
     }
 }
