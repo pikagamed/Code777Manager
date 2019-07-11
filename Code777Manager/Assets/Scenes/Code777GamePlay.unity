@@ -10037,6 +10037,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24f85726c4956884db87d5b1f335b3b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  secretPassword: AkIVinANJoHKANamihGara
   status: 0
   tileImages:
   - {fileID: 21300000, guid: 636da9426dcdadb4a8b1344568e0de7f, type: 3}

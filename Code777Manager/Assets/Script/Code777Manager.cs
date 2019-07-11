@@ -7,6 +7,9 @@ public enum GameStatus { Idle, NextStep, NumberCall, PlayerCall, SecondJudge, Ga
 
 public class Code777Manager : MonoBehaviour
 {
+    [Header("AKino的密藏密碼")]
+    public string secretPassword;
+
     //遊戲狀態
     public GameStatus status = GameStatus.Idle;
 
@@ -1762,18 +1765,24 @@ public class Code777Manager : MonoBehaviour
                     questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>獲得勝利";
                     answerText.text = "遊戲結束";
                     logMessage.Add("<color=#FF8080>遊戲結束</color>");
+                    if(activePlayer[0].victory>=1) logMessage.Add("AKino準備了這段訊息給你\n未來的哪一天也許你會用的上喔！");
                     break;
                 case Language.Japanese:
                     questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>はゲームに勝ちます";
                     answerText.text = "ゲームオーバー";
                     logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
+                    if (activePlayer[0].victory >= 1) logMessage.Add("AKinoはこのメッセージを用意した\nいつか使えるかもしれませんよ！");
                     break;
                 case Language.English:
                     questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> wins the game.";
                     answerText.text = "GAME OVER";
                     logMessage.Add("<color=#FF8080>GAME OVER</color>");
+                    if (activePlayer[0].victory >= 1) logMessage.Add("AKino gives you a message.\nMaybe it will be useful someday!");
                     break;
             }
+
+            logMessage.Add("<b>" + secretPassword + "</b>");
+
             JumpToLatestLog();
 
             //開啟Player側的覆蓋Tile
@@ -2066,19 +2075,22 @@ public class Code777Manager : MonoBehaviour
                         questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>獲得勝利";
                         answerText.text = "遊戲結束";
                         logMessage.Add("<color=#FF8080>遊戲結束</color>");
+                        logMessage.Add("AKino準備了這段訊息給你\n未來的哪一天也許你會用的上喔！");
                         break;
                     case Language.Japanese:
                         questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>はゲームに勝ちます";
                         answerText.text = "ゲームオーバー";
                         logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
+                        logMessage.Add("AKinoはこのメッセージを用意した\nいつか使えるかもしれませんよ！");
                         break;
                     case Language.English:
                         questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> wins the game.";
                         answerText.text = "GAME OVER";
                         logMessage.Add("<color=#FF8080>GAME OVER</color>");
+                        logMessage.Add("AKino gives you a message.\nMaybe it will be useful someday!");
                         break;
                 }
-
+                logMessage.Add("<b>"+secretPassword+"</b>");
                 JumpToLatestLog();
 
                 restartButton.gameObject.SetActive(true);
