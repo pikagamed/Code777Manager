@@ -7,6 +7,9 @@ public enum GameStatus { Idle, NextStep, NumberCall, PlayerCall, SecondJudge, Ga
 
 public class Code777Manager : MonoBehaviour
 {
+    //遊戲狀態
+    public GameStatus status = GameStatus.Idle;
+
     public Sprite[] tileImages;
     int drawPlayer; //抽Player亂數
     int drawTile;   //抽TILE亂數
@@ -34,12 +37,12 @@ public class Code777Manager : MonoBehaviour
     public Text[] playerName;
     public Text[] possibleCount;
 
-    public List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
-    public List<Tile> discardTile = new List<Tile>(3); //使用過被棄置於場中央的Tile堆
-    public List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
+    List<Tile> tilePile = new List<Tile>(28);    //未打開的Tile堆
+    List<Tile> discardTile = new List<Tile>(3); //使用過被棄置於場中央的Tile堆
+    List<int> questionCard = new List<int>(23);//用來給予情報的問題卡
 
-    public bool assistMode;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
-    public bool advancedMode;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
+    bool assistMode;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
+    bool advancedMode;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
 
     public GameObject assistTileSet;
     public Image[] assistTile;
@@ -47,7 +50,7 @@ public class Code777Manager : MonoBehaviour
 
     public List<Player> activePlayer;
 
-    public int answerPlayer;
+    int answerPlayer;
 
     public Text questionText;
     public Text answerText;
@@ -55,7 +58,7 @@ public class Code777Manager : MonoBehaviour
 
     #region 遊戲中的LOG
     public GameObject assistLog;
-    public List<string> logMessage = new List<string>();
+    List<string> logMessage = new List<string>();
     public Text[] logTextId;
     public Text[] logTextContent;
     public Slider logSlider;
@@ -65,21 +68,26 @@ public class Code777Manager : MonoBehaviour
     public Button callButton;
     public Button passButton;
     public Button restartButton;
+    public Button menuButton;
+    public Text startText;
+    public Text callText;
+    public Text passText;
+    public Text restartText;
+    public Text menuText;
 
     public GameObject playerInputUI;
     public Button[] numberUp;
     public Button[] numberDown;
     public Image[] numberTile;
     public Button submitCall;
-    public int[] numberCallTile = { -1, -1, -1 };
+    public Text submitText;
+    int[] numberCallTile = { -1, -1, -1 };
 
 
     //操控控制項
-    public static bool answerCall = false;
+    bool answerCall = false;
     //玩家是否要叫用數字，以布林值playerCall來判斷
-    public static bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
-
-    public static GameStatus status = GameStatus.Idle;
+    bool playerCall = false;    //玩家如果要呼叫數字，則為true；否則為false
 
     //遊戲的狀態
 
@@ -113,6 +121,34 @@ public class Code777Manager : MonoBehaviour
     {
         assistMode = Code777Menu.difficulty == Difficulty.Assist;  //輔助模式，此模式開啟下會於場景右下角提示可能TILE
         advancedMode = Code777Menu.difficulty == Difficulty.Advanced;   //進階模式，此模式開啟下呼叫數字必須連顏色都正確
+
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                startText.text = "開始";
+                callText.text = "猜測";
+                passText.text = "PASS";
+                restartText.text = "再玩一局";
+                menuText.text = "回主選單";
+                submitText.text = "確認";
+                break;
+            case Language.Japanese:
+                startText.text = "スタート";
+                callText.text = "コール";
+                passText.text = "パス";
+                restartText.text = "もう一局";
+                menuText.text = "メニュー";
+                submitText.text = "決定";
+                break;
+            case Language.English:
+                startText.text = "START";
+                callText.text = "CALL";
+                passText.text = "PASS";
+                restartText.text = "RESTART";
+                menuText.text = "MENU";
+                submitText.text = "CALL";
+                break;
+        }
 
         questionText.text = "";
         answerText.text = "";
@@ -215,7 +251,7 @@ public class Code777Manager : MonoBehaviour
             tile2 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile2
             tilePile.Remove(tilePile[drawTile]);
 
-            activePlayer[i].NewRack(tile0, tile1, tile2);
+            activePlayer[i].NewRack(tile0, tile1, tile2, assistMode, advancedMode);
         }
         #endregion
 
@@ -308,16 +344,6 @@ public class Code777Manager : MonoBehaviour
         answerPlayer = Random.Range(0, 5);
         #endregion
 
-        #region 初始化玩家回答介面按鈕
-        numberUp[0].onClick.AddListener(delegate { PlayerCallKey(0, true); });
-        numberDown[0].onClick.AddListener(delegate { PlayerCallKey(0, false); });
-        numberUp[1].onClick.AddListener(delegate { PlayerCallKey(1, true); });
-        numberDown[1].onClick.AddListener(delegate { PlayerCallKey(1, false); });
-        numberUp[2].onClick.AddListener(delegate { PlayerCallKey(2, true); });
-        numberDown[2].onClick.AddListener(delegate { PlayerCallKey(2, false); });
-        submitCall.onClick.AddListener(delegate { StartCoroutine(PlayerCallSubmit()); });
-        restartButton.onClick.AddListener(RestartKey);
-        #endregion
     }
 
     // Update is called once per frame
@@ -409,11 +435,24 @@ public class Code777Manager : MonoBehaviour
                     //沒有玩家要再回答，進入二輪判定
                     //剛才在同時回答中才確定數字組合的玩家的判定
                     //呼叫數字判定
-                    answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
-                    activePlayer[1].callOk = activePlayer[1].solution;
-                    activePlayer[2].callOk = activePlayer[2].solution;
-                    activePlayer[3].callOk = activePlayer[3].solution;
-                    activePlayer[4].callOk = activePlayer[4].solution;
+                    answerCall = (activePlayer[1].solution && activePlayer[1].handicap == 0) || (activePlayer[2].solution && activePlayer[2].handicap == 0)
+                || (activePlayer[3].solution && activePlayer[3].handicap == 0) || (activePlayer[4].solution && activePlayer[4].handicap == 0);
+
+                    for (int i = 1; i < activePlayer.Count; i++)
+                    {
+                        if (activePlayer[i].handicap > 0 && activePlayer[i].solution)
+                        {
+                            activePlayer[i].handicap--;
+                            activePlayer[i].callOk = false;
+                        }
+                        else
+                            activePlayer[i].callOk = activePlayer[i].solution;
+                    }
+
+                    //activePlayer[1].callOk = activePlayer[1].solution;
+                    //activePlayer[2].callOk = activePlayer[2].solution;
+                    //activePlayer[3].callOk = activePlayer[3].solution;
+                    //activePlayer[4].callOk = activePlayer[4].solution;
                     status = GameStatus.SecondJudge;
                 }
             }
@@ -532,29 +571,60 @@ public class Code777Manager : MonoBehaviour
         }
     }
 
-    void PlayerCallKey(int index, bool upKey)
-    {
-        if (upKey)
-        {
-            if (numberCallTile[index] == -1) numberCallTile[index] = 0;
-            else if (advancedMode) numberCallTile[index] += (numberCallTile[index] == 10) ? (-10) : 1;
-            else numberCallTile[index] += (numberCallTile[index] == 6) ? (-6) : 1;
-        }
-        else
-        {
-            if (numberCallTile[index] == -1) numberCallTile[index] = advancedMode ? 10 : 6;
-            else if (advancedMode) numberCallTile[index] += (numberCallTile[index] == 0) ? 10 : (-1);
-            else numberCallTile[index] += (numberCallTile[index] == 0) ? 6 : (-1);
-        }
+    #region 按鈕部分宣告
 
-        numberTile[index].sprite = advancedMode ? tileSpritesColor[numberCallTile[index]] : tileSprites[numberCallTile[index]];
+    public void GameStart()
+    {
+        //玩家叫用
+        Debug.Log("遊戲開始");
+        status = GameStatus.NextStep;
+    }
+
+    public void InstructorHit(bool numberCall )
+    {
+        //玩家叫用
+        //Debug.Log(numberCall?"按鈕CALL已經按下":"按鈕PASS已經按下");
+        status = GameStatus.NumberCall;
+        answerCall = numberCall ? true : answerCall;
+        playerCall = numberCall ? true : false;
+    }
+
+    public void PlayerCallKeyUp(int callTileIndex)
+    {
+        if (numberCallTile[callTileIndex] == -1) numberCallTile[callTileIndex] = 0;
+        else if (advancedMode) numberCallTile[callTileIndex] += (numberCallTile[callTileIndex] == 10) ? (-10) : 1;
+        else numberCallTile[callTileIndex] += (numberCallTile[callTileIndex] == 6) ? (-6) : 1;
+
+        numberTile[callTileIndex].sprite = advancedMode ? tileSpritesColor[numberCallTile[callTileIndex]] : tileSprites[numberCallTile[callTileIndex]];
         submitCall.gameObject.SetActive(!(numberCallTile[0] == -1 || numberCallTile[1] == -1 || numberCallTile[2] == -1));
     }
 
-    void RestartKey()
+    public void PlayerCallKeyDown(int callTileIndex)
+    {
+        if (numberCallTile[callTileIndex] == -1) numberCallTile[callTileIndex] = advancedMode ? 10 : 6;
+        else if (advancedMode) numberCallTile[callTileIndex] += (numberCallTile[callTileIndex] == 0) ? 10 : (-1);
+        else numberCallTile[callTileIndex] += (numberCallTile[callTileIndex] == 0) ? 6 : (-1);
+
+        numberTile[callTileIndex].sprite = advancedMode ? tileSpritesColor[numberCallTile[callTileIndex]] : tileSprites[numberCallTile[callTileIndex]];
+        submitCall.gameObject.SetActive(!(numberCallTile[0] == -1 || numberCallTile[1] == -1 || numberCallTile[2] == -1));
+    }
+
+    public void PlayerCallSubmitKey()
+    {
+        StartCoroutine(PlayerCallSubmit());
+    }
+
+    public void RestartKey()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("Code777GamePlay");
     }
+
+    public void MenuKey()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+    }
+
+    #endregion
 
     IEnumerator AnswerCard(int cardId, List<Player> players)
     {
@@ -915,8 +985,8 @@ public class Code777Manager : MonoBehaviour
                         logInsert = logInsert + cardId + ". <color=#009960>緑色</color>か<color=#0059FF>青色</color>、より多いのは？";
                         break;
                     case Language.English:
-                        questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#009960>Blue</color></b> numbers?";
-                        logInsert = logInsert + cardId + ". More <color=#009960>Green</color> or more <color=#009960>Blue</color>?";
+                        questionText.text = cardId + ". Do you see more <b><color=#009960>Green</color> or more <color=#0059FF>Blue</color></b> numbers?";
+                        logInsert = logInsert + cardId + ". More <color=#009960>Green</color> or more <color=#0059FF>Blue</color>?";
                         break;
                 }
                 break;
@@ -1563,11 +1633,24 @@ public class Code777Manager : MonoBehaviour
         #endregion
 
         //呼叫數字判定
-        answerCall = activePlayer[1].solution || activePlayer[2].solution || activePlayer[3].solution || activePlayer[4].solution;
-        activePlayer[1].callOk = activePlayer[1].solution;
-        activePlayer[2].callOk = activePlayer[2].solution;
-        activePlayer[3].callOk = activePlayer[3].solution;
-        activePlayer[4].callOk = activePlayer[4].solution;
+        answerCall = (activePlayer[1].solution&& activePlayer[1].handicap==0) || (activePlayer[2].solution && activePlayer[2].handicap == 0)
+                        || (activePlayer[3].solution&& activePlayer[3].handicap == 0) || (activePlayer[4].solution && activePlayer[4].handicap == 0);
+
+        for(int i=1; i<activePlayer.Count; i++)
+        {
+            if(activePlayer[i].handicap>0 && activePlayer[i].solution)
+            {
+                activePlayer[i].handicap--;
+                activePlayer[i].callOk = false;
+            }
+            else
+                activePlayer[i].callOk = activePlayer[i].solution;
+        }
+
+        //activePlayer[1].callOk = activePlayer[1].solution;
+        //activePlayer[2].callOk = activePlayer[2].solution;
+        //activePlayer[3].callOk = activePlayer[3].solution;
+        //activePlayer[4].callOk = activePlayer[4].solution;
 
         #region 重置問題卡
         if (questionCard.Count==0)
@@ -1627,15 +1710,15 @@ public class Code777Manager : MonoBehaviour
         {
             case Language.Chinese:
                 speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 作答數字";
-                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>答對了牌架"+ rackMessage + " ";
+                logInsert += "<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color>答對了牌架"+ rackMessage + " ";
                 break;
             case Language.Japanese:
-                speakerText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> がコールする";
-                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>がラック的中" + rackMessage + " ";
+                speakerText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> のコール";
+                logInsert += "<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color>がラック的中" + rackMessage + " ";
                 break;
             case Language.English:
                 speakerText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> calls the number.";
-                logInsert += "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> calls correctly" + rackMessage + " ";
+                logInsert += "<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color> calls correctly" + rackMessage + " ";
                 break;
         }
         GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
@@ -1651,7 +1734,7 @@ public class Code777Manager : MonoBehaviour
         switch (Code777Menu.language)
         {
             case Language.Chinese:
-                questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 答對了數字";
+                questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>答對了數字";
                 break;
             case Language.Japanese:
                 questionText.text = "<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>あたります";
@@ -1676,12 +1759,12 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 獲得勝利";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>獲得勝利";
                     answerText.text = "遊戲結束";
                     logMessage.Add("<color=#FF8080>遊戲結束</color>");
                     break;
                 case Language.Japanese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> はゲームに勝ちます";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>はゲームに勝ちます";
                     answerText.text = "ゲームオーバー";
                     logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
                     break;
@@ -1698,7 +1781,14 @@ public class Code777Manager : MonoBehaviour
             playerTileBack[1].color = new Color(1, 1, 1, 0);
             playerTileBack[2].color = new Color(1, 1, 1, 0);
 
+            activePlayer[callPlayer].IconRecover();
+            GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().fontStyle =
+                callPlayer == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
+            GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().color =
+                callPlayer == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
+
             restartButton.gameObject.SetActive(true);
+            menuButton.gameObject.SetActive(true);
             status = GameStatus.GameSet;
         }
         else
@@ -1707,10 +1797,10 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> 重設牌架";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>重設牌架";
                     break;
                 case Language.Japanese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> ラックリセット";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>ラックリセット";
                     break;
                 case Language.English:
                     questionText.text += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color> resets the rack.";
@@ -1742,23 +1832,23 @@ public class Code777Manager : MonoBehaviour
             tile2 = new Tile(tilePile[drawTile].number, tilePile[drawTile].color, tilePile[drawTile].image);   //宣告Tile2
             tilePile.Remove(tilePile[drawTile]);
 
-            activePlayer[callPlayer].NewRack(tile0, tile1, tile2);
+            activePlayer[callPlayer].NewRack(tile0, tile1, tile2, assistMode, advancedMode);
 
 
             //如果是答對的玩家，則可以確認自己剛才丟棄的TILE
             //也就是過濾時可以加入discardTile的情報
             activePlayer[callPlayer].RackCheck(activePlayer, discardTile);
 
+            activePlayer[(callPlayer + 1) % 5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 2) % 5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 3) % 5].RackCheck(activePlayer, discardTile);
+            activePlayer[(callPlayer + 4) % 5].RackCheck(activePlayer, discardTile);
+
             //discardTile要洗回Tile堆中
             tilePile.Add(discardTile[0]);
             tilePile.Add(discardTile[1]);
             tilePile.Add(discardTile[2]);
             discardTile.Clear();
-
-            activePlayer[(callPlayer+1)%5].RackCheck(activePlayer, discardTile);
-            activePlayer[(callPlayer + 2) % 5].RackCheck(activePlayer, discardTile);
-            activePlayer[(callPlayer + 3) % 5].RackCheck(activePlayer, discardTile);
-            activePlayer[(callPlayer + 4) % 5].RackCheck(activePlayer, discardTile);
 
             //玩家0的輔助模式
             TileLight();
@@ -1768,8 +1858,7 @@ public class Code777Manager : MonoBehaviour
                 callPlayer == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
             GameObject.Find("Player" + callPlayer + "Name").GetComponent<Text>().color =
                 callPlayer == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
-            yield return new WaitForSeconds(2);
-            status = GameStatus.NumberCall;
+
 
             #region 紀錄玩家猜測後牌架
             debugMessage = debugMessage + "\n牌架更換為";
@@ -1798,18 +1887,21 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>牌架重設為" + rackMessage ;
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color>牌架重設為" + rackMessage ;
                     break;
                 case Language.Japanese:
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>ラックリセット" + rackMessage ;
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color>ラックリセット" + rackMessage ;
                     break;
                 case Language.English:
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[callPlayer].name + "</color>Rack reset" + rackMessage ;
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[callPlayer].name + "</b></color>Rack reset" + rackMessage ;
                     break;
             }
             logMessage.Add(logInsert);
             JumpToLatestLog();
             Debug.Log(debugMessage);
+
+            yield return new WaitForSeconds(2);
+            status = GameStatus.NumberCall;
         }
     }
 
@@ -1834,7 +1926,7 @@ public class Code777Manager : MonoBehaviour
                 speakerText.text = "輪到 <color=#00C0FF>" + activePlayer[0].name + "</color> 作答數字";
                 break;
             case Language.Japanese:
-                speakerText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> がコールする";
+                speakerText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> のコール";
                 break;
             case Language.English:
                 speakerText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> calls the number.";
@@ -1843,8 +1935,8 @@ public class Code777Manager : MonoBehaviour
         GameObject.Find("Player0Name").GetComponent<Text>().fontStyle = FontStyle.Bold;
         GameObject.Find("Player0Name").GetComponent<Text>().color = new Color(0, 0.75F, 1, 1);
 
-        //暫停1秒
-        yield return new WaitForSeconds(1);
+        //暫停1秒→不暫停
+        yield return new WaitForSeconds(0.5F);
 
         playerInputUI.SetActive(true);
         numberUp[0].gameObject.SetActive(true);
@@ -1934,16 +2026,16 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答對了數字";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>答對了牌架" + rackMessage + " ";
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>答對了數字";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>答對了牌架" + rackMessage + " ";
                     break;
                 case Language.Japanese:
                     questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>あたります";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>がラック的中" + rackMessage + " ";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>がラック的中" + rackMessage + " ";
                     break;
                 case Language.English:
                     questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>'s calling is correct.";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color> calls correctly" + rackMessage + " ";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color> calls correctly" + rackMessage + " ";
                     break;
             }
             activePlayer[0].GetPoint();
@@ -1962,15 +2054,21 @@ public class Code777Manager : MonoBehaviour
                 Debug.Log(debugMessage);
                 logMessage.Add(logInsert);
 
+                activePlayer[0].IconRecover();
+                GameObject.Find("Player0Name").GetComponent<Text>().fontStyle =
+                    0 == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
+                GameObject.Find("Player0Name").GetComponent<Text>().color =
+                    0 == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
+
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
-                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 獲得勝利";
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>獲得勝利";
                         answerText.text = "遊戲結束";
                         logMessage.Add("<color=#FF8080>遊戲結束</color>");
                         break;
                     case Language.Japanese:
-                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はゲームに勝ちます";
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>はゲームに勝ちます";
                         answerText.text = "ゲームオーバー";
                         logMessage.Add("<color=#FF8080>ゲームオーバー</color>");
                         break;
@@ -1997,16 +2095,16 @@ public class Code777Manager : MonoBehaviour
                 switch (Code777Menu.language)
                 {
                     case Language.Chinese:
-                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
-                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>重設牌架";
+                        logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color> 重設牌架";
                         break;
                     case Language.Japanese:
-                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はラックをリセットする";
-                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> はラックをリセットする";
+                        questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>ラックリセット";
+                        logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>ラックリセット";
                         break;
                     case Language.English:
                         questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
-                        logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                        logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color> resets the rack.";
                         break;
                 }
 
@@ -2042,16 +2140,16 @@ public class Code777Manager : MonoBehaviour
                 //也就是過濾時可以加入discardTile的情報
                 activePlayer[0].RackCheck(activePlayer, discardTile);
 
+                activePlayer[1].RackCheck(activePlayer, discardTile);
+                activePlayer[2].RackCheck(activePlayer, discardTile);
+                activePlayer[3].RackCheck(activePlayer, discardTile);
+                activePlayer[4].RackCheck(activePlayer, discardTile);
+
                 //discardTile要洗回Tile堆中
                 tilePile.Add(discardTile[0]);
                 tilePile.Add(discardTile[1]);
                 tilePile.Add(discardTile[2]);
                 discardTile.Clear();
-
-                activePlayer[1].RackCheck(activePlayer, discardTile);
-                activePlayer[2].RackCheck(activePlayer, discardTile);
-                activePlayer[3].RackCheck(activePlayer, discardTile);
-                activePlayer[4].RackCheck(activePlayer, discardTile);
 
                 //玩家0的輔助模式
                 TileLight();
@@ -2061,8 +2159,6 @@ public class Code777Manager : MonoBehaviour
                     0== answerPlayer ? FontStyle.Bold : FontStyle.Normal;
                 GameObject.Find("Player0Name").GetComponent<Text>().color =
                     0 == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
-                yield return new WaitForSeconds(2);
-                status = GameStatus.NumberCall;
 
                 #region 紀錄玩家猜測後牌架
                 debugMessage = debugMessage + "\n牌架更換為";
@@ -2088,6 +2184,9 @@ public class Code777Manager : MonoBehaviour
                 Debug.Log(debugMessage);
                 logMessage.Add(logInsert);
                 JumpToLatestLog();
+
+                yield return new WaitForSeconds(2);
+                status = GameStatus.NumberCall;
             }
         }
         else
@@ -2099,16 +2198,16 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color> 答錯了數字";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>猜測" + guessMessage + "但答錯了";
+                    questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>答錯了數字";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>猜測" + guessMessage + "但答錯了";
                     break;
                 case Language.Japanese:
                     questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>はずれます";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color>が" + guessMessage + "コールしたがはずれた";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>が" + guessMessage + "コールしたがはずれた";
                     break;
                 case Language.English:
                     questionText.text = "<color=#00C0FF>" + activePlayer[0].name + "</color>'s calling is wrong.";
-                    logInsert += "<color=#00C0FF>" + activePlayer[0].name + "</color> calls " + guessMessage + " but wrong.";
+                    logInsert += "<color=#00C0FF><b>" + activePlayer[0].name + "</b></color> calls " + guessMessage + " but wrong.";
                     break;
             }
             yield return new WaitForSeconds(2);
@@ -2120,16 +2219,16 @@ public class Code777Manager : MonoBehaviour
             switch (Code777Menu.language)
             {
                 case Language.Chinese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> 重設牌架";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>重設牌架";
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>重設牌架";
                     break;
                 case Language.Japanese:
-                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>  ラックリセット";
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>  ラックリセット";
+                    questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color>ラックリセット";
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color>ラックリセット";
                     break;
                 case Language.English:
                     questionText.text += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
-                    logInsert += "\n<color=#00C0FF>" + activePlayer[0].name + "</color> resets the rack.";
+                    logInsert += "\n<color=#00C0FF><b>" + activePlayer[0].name + "</b></color> resets the rack.";
                     break;
             }
 
@@ -2160,6 +2259,10 @@ public class Code777Manager : MonoBehaviour
 
             activePlayer[0].NewRack(tile0, tile1, tile2);
 
+            activePlayer[1].RackCheck(activePlayer, discardTile);
+            activePlayer[2].RackCheck(activePlayer, discardTile);
+            activePlayer[3].RackCheck(activePlayer, discardTile);
+            activePlayer[4].RackCheck(activePlayer, discardTile);
 
             //discardTile要洗回Tile堆中
             tilePile.Add(discardTile[0]);
@@ -2170,11 +2273,6 @@ public class Code777Manager : MonoBehaviour
             //答錯的玩家 要在不知道自己原本牌架的情況下對下一個牌架做篩選
             activePlayer[0].RackCheck(activePlayer, discardTile);
 
-            activePlayer[1].RackCheck(activePlayer, discardTile);
-            activePlayer[2].RackCheck(activePlayer, discardTile);
-            activePlayer[3].RackCheck(activePlayer, discardTile);
-            activePlayer[4].RackCheck(activePlayer, discardTile);
-
             //玩家0的輔助模式
             TileLight();
 
@@ -2183,8 +2281,6 @@ public class Code777Manager : MonoBehaviour
                 0 == answerPlayer ? FontStyle.Bold : FontStyle.Normal;
             GameObject.Find("Player0Name").GetComponent<Text>().color =
                 0 == answerPlayer ? new Color(1, 0.75F, 0, 1) : new Color(1, 1, 1, 1);
-            yield return new WaitForSeconds(2);
-            status = GameStatus.NumberCall;
 
             #region 紀錄玩家猜測後牌架
             debugMessage = debugMessage + "\n牌架更換為";
@@ -2210,6 +2306,9 @@ public class Code777Manager : MonoBehaviour
             Debug.Log(debugMessage);
             logMessage.Add(logInsert);
             JumpToLatestLog();
+
+            yield return new WaitForSeconds(2);
+            status = GameStatus.NumberCall;
         }
 
     }

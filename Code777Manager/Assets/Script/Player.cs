@@ -22,6 +22,7 @@ public class Player
     private Rack _rack;
     private bool _solution;
     private bool _callOk;
+    private int _handicap;
 
     private GameObject[] _tileSprite = new GameObject[3];
     private GameObject[] _victoryLight = new GameObject[3];
@@ -42,6 +43,7 @@ public class Player
     public Rack rack { get { return _rack; } }
     public bool solution { get { return _solution; } set { _solution = value; } }
     public bool callOk { get { return _callOk; } set { _callOk = value; } }
+    public int handicap { get { return _handicap; } set { _handicap = value; } }
     public TileInfer possibleNumber { get { return _possibleNumber; } }
 
     #endregion
@@ -84,13 +86,16 @@ public class Player
     /// <param name="tile0">左TILE</param>
     /// <param name="tile1">中TILE</param>
     /// <param name="tile2">右TILE</param>
-    public void NewRack(Tile tile0, Tile tile1, Tile tile2)
+    /// <param name="assist">輔助模式由於很容易可以答出答案，因此不會給予電腦任何答題猶豫。</param>
+    /// <param name="assist">進階模式由於需要更順序正確，因此會再給予電腦一些答題猶豫。</param>
+    public void NewRack(Tile tile0, Tile tile1, Tile tile2, bool assist = true, bool advanced = false)
     {
         _rack = new Rack(tile0, tile1, tile2);
         _tileSprite[0].GetComponent<Image>().sprite = tile0.image;
         _tileSprite[1].GetComponent<Image>().sprite = tile1.image;
         _tileSprite[2].GetComponent<Image>().sprite = tile2.image;
 
+        _handicap = (assist ? 0 : 3) + (advanced ? 2 : 0);
 
         _callOk = false;
         _possibleNumber = new TileInfer(true);
@@ -1636,7 +1641,7 @@ public class Player
                             }
 
                             //compare1>compare2且compareKey1為true、 compare1<compare2且compareKey1為false、 compare1==compare2且compareKey1、compareKey2均為false
-                            conditionCheck = ((compareTileKey1 + gotTiles[10] > compareTileKey2 + gotTiles[8] + gotTiles[8]) && compareKey1) ||
+                            conditionCheck = ((compareTileKey1 + gotTiles[10] > compareTileKey2 + gotTiles[8] + gotTiles[9]) && compareKey1) ||
                                                         ((compareTileKey1 + gotTiles[10] < compareTileKey2 + gotTiles[8] + gotTiles[9]) && compareKey2) ||
                                                         ((compareTileKey1 + gotTiles[10] == compareTileKey2 + gotTiles[8] + gotTiles[9]) && !compareKey1 && !compareKey2);
 

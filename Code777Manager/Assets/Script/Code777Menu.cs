@@ -13,6 +13,7 @@ public class Code777Menu : MonoBehaviour
     public Text languageText;
     public Text difficultyText;
     public Text hintText;
+    public Text startText;
 
     public static Language language = Language.Chinese;
     public static Difficulty difficulty = Difficulty.Assist;
@@ -23,6 +24,7 @@ public class Code777Menu : MonoBehaviour
         languageText.text = "中文";
         difficultyText.text = "輔助模式";
         hintText.text = "畫面右下角會提示剩餘數字牌的可能性";
+        startText.text = "開始";
     }
 
     // Update is called once per frame
@@ -42,6 +44,7 @@ public class Code777Menu : MonoBehaviour
             case Language.Chinese:
                 language = Language.English;
                 languageText.text = "English";
+                startText.text = "START";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:
@@ -63,6 +66,7 @@ public class Code777Menu : MonoBehaviour
             case Language.Japanese:
                 language = Language.Chinese;
                 languageText.text = "中文";
+                startText.text = "開始";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:
@@ -84,6 +88,7 @@ public class Code777Menu : MonoBehaviour
             case Language.English:
                 language = Language.Japanese;
                 languageText.text = "日本語";
+                startText.text = "スタート";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:
@@ -118,6 +123,7 @@ public class Code777Menu : MonoBehaviour
             case Language.Chinese:
                 language = Language.Japanese;
                 languageText.text = "日本語";
+                startText.text = "スタート";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:
@@ -139,6 +145,7 @@ public class Code777Menu : MonoBehaviour
             case Language.Japanese:
                 language = Language.English;
                 languageText.text = "English";
+                startText.text = "START";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:
@@ -160,6 +167,7 @@ public class Code777Menu : MonoBehaviour
             case Language.English:
                 language = Language.Chinese;
                 languageText.text = "中文";
+                startText.text = "開始";
                 switch (difficulty)
                 {
                     case Difficulty.Assist:

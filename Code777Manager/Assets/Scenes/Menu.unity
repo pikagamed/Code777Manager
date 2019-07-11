@@ -1891,6 +1891,7 @@ MonoBehaviour:
   languageText: {fileID: 1382342471}
   difficultyText: {fileID: 1896507922}
   hintText: {fileID: 338190034}
+  startText: {fileID: 100496562}
 --- !u!1 &1896507920
 GameObject:
   m_ObjectHideFlags: 0
