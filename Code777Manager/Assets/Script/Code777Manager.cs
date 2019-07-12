@@ -369,6 +369,33 @@ public class Code777Manager : MonoBehaviour
             }
         }
 
+
+        if(Input.mouseScrollDelta.y!=0)
+        {
+            if(Input.mouseScrollDelta.y>0)
+            {
+                if(extendLog.active)
+                {
+                    exLogSlider.value--;
+                }
+                else
+                {
+                    logSlider.value--;
+                }
+            }
+            else
+            {
+                if (extendLog.active)
+                {
+                    exLogSlider.value++;
+                }
+                else
+                {
+                    logSlider.value++;
+                }
+            }
+        }
+
         if (status == GameStatus.NextStep)
         {
             //新回合的進入點
