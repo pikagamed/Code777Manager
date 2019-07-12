@@ -65,6 +65,11 @@ public class Code777Manager : MonoBehaviour
     public Text[] logTextId;
     public Text[] logTextContent;
     public Slider logSlider;
+
+    public GameObject extendLog;
+    public Text[] exLogTextId;
+    public Text[] exLogTextContent;
+    public Slider exLogSlider;
     #endregion
 
     public Button startButton;
@@ -554,6 +559,31 @@ public class Code777Manager : MonoBehaviour
             logTextId[i].text = (logMessage.Count - 4 + i).ToString();
             logTextContent[i].text = logMessage[logMessage.Count - 5 + i];
         }
+
+        exLogSlider.gameObject.SetActive(logMessage.Count > 8);
+        exLogSlider.maxValue = logMessage.Count - 8 < 0 ? 0 : logMessage.Count - 8;
+        exLogSlider.value = exLogSlider.maxValue;
+        if (logMessage.Count < 8)
+        {
+            for (int i = 0; i < logMessage.Count; i++)
+            {
+                exLogTextId[i].text = (i + 1).ToString();
+                exLogTextContent[i].text = logMessage[i];
+            }
+            for (int i = logMessage.Count; i < 8; i++)
+            {
+                exLogTextId[i].text = "";
+                exLogTextContent[i].text = "";
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                exLogTextId[i].text = (logMessage.Count - 7 + i).ToString();
+                exLogTextContent[i].text = logMessage[logMessage.Count - 8 + i];
+            }
+        }
     }
 
     public void LogSliding()
@@ -571,6 +601,41 @@ public class Code777Manager : MonoBehaviour
         {
             logTextId[i].text = (segement + i + 1).ToString();
             logTextContent[i].text = logMessage[segement + i];
+        }
+    }
+
+    public void exLogSliding()
+    {
+        //Silde的邏輯：
+        //假設LogList小於等於8個字串，Slide不起作用
+        //假設LogList等於9個字串，會把List分割為兩個區間
+        //假設LogList等於10個字串，會把List分割為三個區間
+
+        //因此邏輯為，將Value分割為 logMessage.Count - 7 個區間
+
+        int segement = (int)exLogSlider.value;
+
+        if (logMessage.Count<8)
+        {
+            for (int i = 0; i < logMessage.Count; i++)
+            {
+                exLogTextId[i].text = (segement + i + 1).ToString();
+                exLogTextContent[i].text = logMessage[segement + i];
+            }
+
+            for (int i = logMessage.Count; i < 8; i++)
+            {
+                exLogTextId[i].text = "";
+                exLogTextContent[i].text = "";
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                exLogTextId[i].text = (segement + i + 1).ToString();
+                exLogTextContent[i].text = logMessage[segement + i];
+            }
         }
     }
 
@@ -625,6 +690,11 @@ public class Code777Manager : MonoBehaviour
     public void MenuKey()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+    }
+
+    public void OpenExtendLog(bool open)
+    {
+        extendLog.SetActive(open);
     }
 
     #endregion
@@ -1063,6 +1133,8 @@ public class Code777Manager : MonoBehaviour
                 break;
         }
 
+        #endregion
+
         switch (Code777Menu.language)
         {
             case Language.Chinese:
@@ -1075,8 +1147,6 @@ public class Code777Manager : MonoBehaviour
                 logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>'s answer:  ";
                 break;
         }
-       
-        #endregion
 
         yield return new WaitForSeconds(2);
 
@@ -1595,6 +1665,9 @@ public class Code777Manager : MonoBehaviour
         }
         logInsert = logInsert + answerText.text;
 
+        #endregion
+
+        #region DEBUG MESSAGE的處理
         debugMessage = debugMessage + activePlayer[answerPlayer].name + "回答： " + questionText.text + "　" + answerText.text +"\n";
         debugMessage = debugMessage + activePlayer[answerPlayer].name + "所見： ";
         for(int i= answerPlayer+1; i< answerPlayer+activePlayer.Count;i++)
@@ -1620,6 +1693,54 @@ public class Code777Manager : MonoBehaviour
         Debug.Log(debugMessage);
         #endregion
 
+        #region LOG MESSAGE的處理
+        switch (Code777Menu.language)
+        {
+            case Language.Chinese:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>所見：　";
+                break;
+            case Language.Japanese:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b>の現物：　";
+                break;
+            case Language.English:
+                logInsert = logInsert + "\n<b><color=#FFC000>" + activePlayer[answerPlayer].name + "</color></b> sees:　";
+                break;
+        }
+        for (int i = answerPlayer + 1; i < answerPlayer + activePlayer.Count; i++)
+        {
+            if(i % activePlayer.Count==0)
+            {
+                logInsert = logInsert + activePlayer[i % activePlayer.Count].name + "【<b> ? ? ? </b>】　";
+            }
+            else
+            {
+                logInsert += "【<b> ";
+                for (int j = 0; j < 3; j++)
+                {
+                    switch (activePlayer[i % activePlayer.Count].rack.tiles[j].color)
+                    {
+                        case "G": logInsert += "<color=#009960>"; break;
+                        case "Y": logInsert += "<color=#F2CC00>"; break;
+                        case "K": logInsert += "<color=#808080>"; break;
+                        case "B": logInsert += "<color=#A64C26>"; break;
+                        case "R": logInsert += "<color=#D90000>"; break;
+                        case "P": logInsert += "<color=#D91ACC>"; break;
+                        case "C": logInsert += "<color=#0059FF>"; break;
+                        default: break;
+                    }
+                    logInsert += activePlayer[i % activePlayer.Count].rack.tiles[j].number + "</color> ";
+                }
+                logInsert += "</b>】　";
+            }
+        }
+        #endregion
+
+        //增加LOG
+        #region LOG增加的處理
+        logMessage.Add(logInsert);
+        JumpToLatestLog();
+        #endregion
+
         activePlayer[(answerPlayer + 4) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
         activePlayer[(answerPlayer + 3) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
         activePlayer[(answerPlayer + 2) % 5].AnswerFilter(answerPlayer, activePlayer, cardId, answerKey, compareKey1 > compareKey2 ? true : false, compareKey1 < compareKey2 ? true : false);
@@ -1628,12 +1749,6 @@ public class Code777Manager : MonoBehaviour
         //玩家0的輔助模式
         TileLight();
 
-
-        //增加LOG
-        #region LOG增加的處理
-        logMessage.Add(logInsert);
-        JumpToLatestLog();
-        #endregion
 
         //呼叫數字判定
         answerCall = (activePlayer[1].solution&& activePlayer[1].handicap==0) || (activePlayer[2].solution && activePlayer[2].handicap == 0)
